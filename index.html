@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,9 +11,15 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/animations.css">
   <script src="js/countdown.js" defer></script>
+  <script src="js/i18n.js" defer></script>
   <script src="js/intro.js" defer></script>
 </head>
 <body>
+  <div class="lang-switch" role="group" aria-label="Language / भाषा">
+    <button type="button" data-lang-btn="mr">मराठी</button>
+    <button type="button" data-lang-btn="en">English</button>
+  </div>
+
   <div class="intro-overlay" id="intro" aria-hidden="true">
     <button class="intro-skip" id="introSkip" type="button" aria-label="Skip intro">Skip &times;</button>
     <svg class="intro-mandala" viewBox="0 0 100 100" aria-hidden="true">
@@ -35,55 +41,59 @@
         <path d="M50 4 L50 96 M4 50 L96 50 M18 18 L82 82 M82 18 L18 82"/>
       </svg>
       <p class="deity">॥ श्री गणेशाय नमः ॥</p>
-      <p class="divider">Save the Date</p>
-      <h1 class="names">Sunny <span class="amp">&amp;</span> Trupti</h1>
-      <p class="tagline">are getting engaged</p>
+      <p class="divider" data-en="Save the Date" data-mr="ही तारीख लक्षात ठेवा">ही तारीख लक्षात ठेवा</p>
+      <h1 class="names">
+        <span data-en="Sunny" data-mr="सनी">सनी</span>
+        <span class="amp">&amp;</span>
+        <span data-en="Trupti" data-mr="तृप्ती">तृप्ती</span>
+      </h1>
+      <p class="tagline" data-en="are getting engaged" data-mr="यांचा साखरपुडा होत आहे">यांचा साखरपुडा होत आहे</p>
       <div class="countdown" aria-label="Countdown to the engagement">
-        <div class="cd-unit"><span class="cd-num" data-cd-days>—</span><span class="cd-label">Days</span></div>
-        <div class="cd-unit"><span class="cd-num" data-cd-hours>—</span><span class="cd-label">Hrs</span></div>
-        <div class="cd-unit"><span class="cd-num" data-cd-minutes>—</span><span class="cd-label">Min</span></div>
-        <div class="cd-unit"><span class="cd-num" data-cd-seconds>—</span><span class="cd-label">Sec</span></div>
+        <div class="cd-unit"><span class="cd-num" data-cd-days>—</span><span class="cd-label" data-en="Days" data-mr="दिवस">दिवस</span></div>
+        <div class="cd-unit"><span class="cd-num" data-cd-hours>—</span><span class="cd-label" data-en="Hrs" data-mr="तास">तास</span></div>
+        <div class="cd-unit"><span class="cd-num" data-cd-minutes>—</span><span class="cd-label" data-en="Min" data-mr="मिनिटे">मिनिटे</span></div>
+        <div class="cd-unit"><span class="cd-num" data-cd-seconds>—</span><span class="cd-label" data-en="Sec" data-mr="सेकंद">सेकंद</span></div>
       </div>
     </section>
 
     <!-- 2. INVITE NOTE -->
     <section class="note" data-reveal>
-      <p class="label">With the blessings of our families</p>
-      <p class="note-text">Two souls, one beautiful beginning. We would be honoured by your presence as we exchange our rings.</p>
+      <p class="label" data-en="With the blessings of our families" data-mr="आमच्या परिवारांच्या आशीर्वादाने">आमच्या परिवारांच्या आशीर्वादाने</p>
+      <p class="note-text" data-en="Two souls, one beautiful beginning. We would be honoured by your presence as we exchange our rings." data-mr="दोन जीव, एक सुंदर सुरुवात. आम्ही अंगठ्या बदलत असताना आपल्या उपस्थितीने आम्हाला सन्मानित करा.">दोन जीव, एक सुंदर सुरुवात. आम्ही अंगठ्या बदलत असताना आपल्या उपस्थितीने आम्हाला सन्मानित करा.</p>
     </section>
 
     <!-- 3. EVENT DETAILS -->
     <section class="details" data-reveal>
-      <p class="divider">The Celebration</p>
-      <h2 class="title">Engagement Ceremony</h2>
+      <p class="divider" data-en="The Celebration" data-mr="सोहळा">सोहळा</p>
+      <h2 class="title" data-en="Engagement Ceremony" data-mr="साखरपुडा समारंभ">साखरपुडा समारंभ</h2>
       <div class="card">
-        <div class="row"><span class="k">Date</span><span class="v">Saturday, 4 July 2026</span></div>
-        <div class="row"><span class="k">Time</span><span class="v">11:00 AM onwards</span></div>
-        <div class="row"><span class="k">Venue</span><a class="v venue-link" href="https://maps.app.goo.gl/fGAaMpEKnboMTv9Y6" target="_blank" rel="noopener">Davkhar Mangal Karyalay</a></div>
+        <div class="row"><span class="k" data-en="Date" data-mr="दिनांक">दिनांक</span><span class="v" data-en="Saturday, 4 July 2026" data-mr="शनिवार, ४ जुलै २०२६">शनिवार, ४ जुलै २०२६</span></div>
+        <div class="row"><span class="k" data-en="Time" data-mr="वेळ">वेळ</span><span class="v" data-en="11:00 AM onwards" data-mr="सकाळी ११:०० वाजल्यापासून">सकाळी ११:०० वाजल्यापासून</span></div>
+        <div class="row"><span class="k" data-en="Venue" data-mr="स्थळ">स्थळ</span><a class="v venue-link" href="https://maps.app.goo.gl/fGAaMpEKnboMTv9Y6" target="_blank" rel="noopener" data-en="Davkhar Mangal Karyalay" data-mr="डावखर मंगल कार्यालय">डावखर मंगल कार्यालय</a></div>
       </div>
     </section>
 
     <!-- 4. RSVP -->
     <section class="rsvp" data-reveal>
-      <p class="divider">Kindly RSVP</p>
-      <h2 class="title">Will you join us?</h2>
-      <p class="rsvp-text">Please let us know by filling the short form so we can plan to celebrate with you.</p>
-      <a class="btn" href="https://forms.gle/CgHVPTsHH6zAcYjA6" target="_blank" rel="noopener">RSVP Here</a>
+      <p class="divider" data-en="Kindly RSVP" data-mr="कृपया उपस्थिती कळवा">कृपया उपस्थिती कळवा</p>
+      <h2 class="title" data-en="Will you join us?" data-mr="आपण याल का?">आपण याल का?</h2>
+      <p class="rsvp-text" data-en="Please let us know by filling the short form so we can plan to celebrate with you." data-mr="कृपया हा छोटा फॉर्म भरून आम्हाला कळवा, जेणेकरून आम्ही आपल्यासोबत साजरे करण्याचे नियोजन करू शकू.">कृपया हा छोटा फॉर्म भरून आम्हाला कळवा, जेणेकरून आम्ही आपल्यासोबत साजरे करण्याचे नियोजन करू शकू.</p>
+      <a class="btn" href="https://forms.gle/CgHVPTsHH6zAcYjA6" target="_blank" rel="noopener" data-en="RSVP Here" data-mr="इथे उपस्थिती नोंदवा">इथे उपस्थिती नोंदवा</a>
     </section>
 
     <!-- 5. VENUE & DIRECTIONS -->
     <section class="venue" data-reveal>
-      <p class="divider">Find Your Way</p>
-      <h2 class="title">Venue &amp; Directions</h2>
-      <p class="venue-name">Davkhar Mangal Karyalay</p>
-      <a class="btn" href="https://maps.app.goo.gl/fGAaMpEKnboMTv9Y6" target="_blank" rel="noopener">Open in Google Maps</a>
+      <p class="divider" data-en="Find Your Way" data-mr="मार्ग शोधा">मार्ग शोधा</p>
+      <h2 class="title" data-en="Venue &amp; Directions" data-mr="स्थळ व मार्गदर्शन">स्थळ व मार्गदर्शन</h2>
+      <p class="venue-name" data-en="Davkhar Mangal Karyalay" data-mr="डावखर मंगल कार्यालय">डावखर मंगल कार्यालय</p>
+      <a class="btn" href="https://maps.app.goo.gl/fGAaMpEKnboMTv9Y6" target="_blank" rel="noopener" data-en="Open in Google Maps" data-mr="गूगल नकाशावर उघडा">गूगल नकाशावर उघडा</a>
     </section>
 
     <!-- 6. FOOTER -->
     <footer class="site-footer" data-reveal>
       <span class="amp footer-amp">&amp;</span>
-      <p class="footer-line">We can't wait to celebrate with you!</p>
-      <p class="footer-meta">Sunny &amp; Trupti · 04.07.2026</p>
+      <p class="footer-line" data-en="We can't wait to celebrate with you!" data-mr="आपल्यासोबत साजरे करण्यासाठी आम्ही उत्सुक आहोत!">आपल्यासोबत साजरे करण्यासाठी आम्ही उत्सुक आहोत!</p>
+      <p class="footer-meta" data-en="Sunny &amp; Trupti · 04.07.2026" data-mr="सनी आणि तृप्ती · ०४.०७.२०२६">सनी आणि तृप्ती · ०४.०७.२०२६</p>
     </footer>
 
   </main>

@@ -11,6 +11,46 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Language switch */
+.lang-switch {
+  position: fixed; top: 14px; left: 14px; z-index: 50;
+  display: inline-flex; gap: 2px;
+  background: rgba(247, 241, 230, .92);
+  border: 1px solid var(--gold);
+  border-radius: 30px; padding: 3px;
+}
+.lang-switch button {
+  font-family: 'Tiro Devanagari Marathi', 'Montserrat', sans-serif;
+  font-size: 12px; line-height: 1; cursor: pointer;
+  border: 0; background: transparent; color: var(--maroon);
+  padding: 6px 13px; border-radius: 30px;
+  transition: background .2s, color .2s;
+}
+.lang-switch button[aria-pressed="true"] { background: var(--maroon); color: var(--ivory); }
+
+/* Marathi typography — Devanagari for the elegant serif headings… */
+html[lang="mr"] .names,
+html[lang="mr"] .title,
+html[lang="mr"] .note-text,
+html[lang="mr"] .v,
+html[lang="mr"] .cd-num,
+html[lang="mr"] .footer-line,
+html[lang="mr"] .venue-name {
+  font-family: 'Tiro Devanagari Marathi', 'Cormorant Garamond', Georgia, serif;
+}
+/* …and for the small uppercase labels, which read poorly when letter-spaced + uppercased in Devanagari */
+html[lang="mr"] .divider,
+html[lang="mr"] .label,
+html[lang="mr"] .tagline,
+html[lang="mr"] .k,
+html[lang="mr"] .cd-label,
+html[lang="mr"] .btn,
+html[lang="mr"] .footer-meta {
+  font-family: 'Tiro Devanagari Marathi', 'Montserrat', sans-serif;
+  text-transform: none;
+  letter-spacing: normal; /* Devanagari conjuncts/matras break apart with any letter-spacing */
+}
+
 body {
   background: var(--ivory);
   color: var(--text);
@@ -55,7 +95,7 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .mandala { width: 80px; height: 80px; margin: 0 auto 16px; opacity: .7; display: block; }
 .deity {
   font-family: 'Tiro Devanagari Marathi', serif;
-  font-size: 15px; color: var(--gold-soft); letter-spacing: 1px; margin-bottom: 22px;
+  font-size: 15px; color: var(--gold-soft); letter-spacing: normal; margin-bottom: 22px;
 }
 .names {
   font-family: 'Cormorant Garamond', Georgia, serif;
