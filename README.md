@@ -25,3 +25,6 @@ Static site — host the folder on GitHub Pages, Netlify, Cloudflare Pages, or a
 - `css/styles.css` — all styling
 - `js/countdown.js` — live countdown logic (+ unit-testable `getRemaining`)
 - `test/countdown.test.js` — countdown unit tests
+- `css/animations.css` — intro + scroll animation layer
+- `js/intro.js` — cinematic intro sequence, Skip, reduced-motion gate, scroll reveals (+ unit-testable `shouldPlayIntro`)
+- `test/intro.test.js` — intro reduced-motion unit tests

@@ -9,9 +9,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Tangerine:wght@400;700&family=Montserrat:wght@300;400;500&family=Tiro+Devanagari+Marathi&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/animations.css">
   <script src="js/countdown.js" defer></script>
+  <script src="js/intro.js" defer></script>
 </head>
 <body>
+  <div class="intro-overlay" id="intro" aria-hidden="true">
+    <button class="intro-skip" id="introSkip" type="button" aria-label="Skip intro">Skip &times;</button>
+    <svg class="intro-mandala" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="10"/>
+      <path d="M50 4 L50 96 M4 50 L96 50 M18 18 L82 82 M82 18 L18 82"/>
+    </svg>
+    <span class="intro-bloom"></span>
+    <span class="intro-petal intro-petal--1"></span>
+    <span class="intro-petal intro-petal--2"></span>
+    <span class="intro-petal intro-petal--3"></span>
+  </div>
   <main class="page">
 
     <!-- 1. HERO -->
@@ -34,24 +47,24 @@
     </section>
 
     <!-- 2. INVITE NOTE -->
-    <section class="note">
+    <section class="note" data-reveal>
       <p class="label">With the blessings of our families</p>
       <p class="note-text">Two souls, one beautiful beginning. We would be honoured by your presence as we exchange our rings.</p>
     </section>
 
     <!-- 3. EVENT DETAILS -->
-    <section class="details">
+    <section class="details" data-reveal>
       <p class="divider">The Celebration</p>
       <h2 class="title">Engagement Ceremony</h2>
       <div class="card">
         <div class="row"><span class="k">Date</span><span class="v">Saturday, 4 July 2026</span></div>
-        <div class="row"><span class="k">Time</span><span class="v">10:00 AM onwards</span></div>
-        <div class="row"><span class="k">Venue</span><span class="v">Davkhar Mangal Karyalay</span></div>
+        <div class="row"><span class="k">Time</span><span class="v">11:00 AM onwards</span></div>
+        <div class="row"><span class="k">Venue</span><a class="v venue-link" href="https://maps.app.goo.gl/fGAaMpEKnboMTv9Y6" target="_blank" rel="noopener">Davkhar Mangal Karyalay</a></div>
       </div>
     </section>
 
     <!-- 4. RSVP -->
-    <section class="rsvp">
+    <section class="rsvp" data-reveal>
       <p class="divider">Kindly RSVP</p>
       <h2 class="title">Will you join us?</h2>
       <p class="rsvp-text">Please let us know by filling the short form so we can plan to celebrate with you.</p>
@@ -59,7 +72,7 @@
     </section>
 
     <!-- 5. VENUE & DIRECTIONS -->
-    <section class="venue">
+    <section class="venue" data-reveal>
       <p class="divider">Find Your Way</p>
       <h2 class="title">Venue &amp; Directions</h2>
       <p class="venue-name">Davkhar Mangal Karyalay</p>
@@ -67,7 +80,7 @@
     </section>
 
     <!-- 6. FOOTER -->
-    <footer class="site-footer">
+    <footer class="site-footer" data-reveal>
       <span class="amp footer-amp">&amp;</span>
       <p class="footer-line">We can't wait to celebrate with you!</p>
       <p class="footer-meta">Sunny &amp; Trupti · 04.07.2026</p>

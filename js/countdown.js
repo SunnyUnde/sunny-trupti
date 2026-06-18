@@ -12,7 +12,7 @@
   }
 
   function start() {
-    var target = new Date('2026-07-04T10:00:00+05:30').getTime();
+    var target = new Date('2026-07-04T11:00:00+05:30').getTime();
     var el = {
       d: document.querySelector('[data-cd-days]'),
       h: document.querySelector('[data-cd-hours]'),
@@ -26,7 +26,13 @@
       el.d.textContent = pad(r.days);
       el.h.textContent = pad(r.hours);
       el.m.textContent = pad(r.minutes);
-      el.s.textContent = pad(r.seconds);
+      var s = pad(r.seconds);
+      if (el.s.textContent !== s) {
+        el.s.textContent = s;
+        el.s.classList.remove('tick');
+        void el.s.offsetWidth; // force reflow so the animation restarts
+        el.s.classList.add('tick');
+      }
     }
     tick();
     setInterval(tick, 1000);

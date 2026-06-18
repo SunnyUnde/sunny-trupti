@@ -1,0 +1,87 @@
+/* ===== Engagement site — animation layer (progressive enhancement) ===== */
+
+/* Scroll reveals — hidden only once JS marks the page animation-capable */
+html.js-anim [data-reveal] { opacity: 0; transform: translateY(16px); }
+html.js-anim [data-reveal].in {
+  opacity: 1; transform: none;
+  transition: opacity .7s ease, transform .7s ease;
+}
+
+/* Hero waits behind the intro, then fades up when the intro finishes */
+html.js-anim .hero .deity,
+html.js-anim .hero .names,
+html.js-anim .hero .tagline,
+html.js-anim .hero .countdown { opacity: 0; }
+html.js-anim.intro-done .hero .deity    { animation: introFadeUp .8s ease forwards; }
+html.js-anim.intro-done .hero .names    { animation: introFadeUp .9s ease .15s forwards; }
+html.js-anim.intro-done .hero .tagline  { animation: introFadeUp .8s ease .35s forwards; }
+html.js-anim.intro-done .hero .countdown{ animation: introFadeUp .8s ease .5s forwards; }
+@keyframes introFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== Intro overlay ===== */
+.intro-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 1000;
+  align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #faf4e9, var(--ivory));
+  overflow: hidden;
+}
+.intro-overlay.is-playing { display: flex; animation: introVeilFade .6s ease 1.9s forwards; }
+
+.intro-skip {
+  position: absolute; top: 16px; right: 16px; z-index: 1002;
+  background: transparent; border: 1px solid var(--gold); color: var(--maroon);
+  border-radius: 24px; padding: 7px 16px; font-size: 11px; letter-spacing: 1px;
+  text-transform: uppercase; cursor: pointer; font-family: 'Montserrat', sans-serif;
+}
+.intro-skip:hover { background: var(--gold); color: #fff; }
+
+.intro-mandala { width: 150px; height: 150px; }
+.intro-mandala circle, .intro-mandala path {
+  fill: none; stroke: var(--gold); stroke-width: 1.4;
+  stroke-dasharray: 400; stroke-dashoffset: 400;
+}
+.is-playing .intro-mandala circle, .is-playing .intro-mandala path { animation: introDraw 1.4s ease forwards; }
+
+.intro-bloom {
+  position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+  border-radius: 50%; background: radial-gradient(#f7e9c8, #caa45a); transform: scale(0); z-index: 1001;
+}
+.is-playing .intro-bloom { animation: introBloom 1s ease 1.3s forwards; }
+
+.intro-petal {
+  position: absolute; top: -24px; width: 10px; height: 14px;
+  background: #e3a14b; border-radius: 60% 60% 60% 60% / 80% 80% 40% 40%; opacity: 0; z-index: 1003;
+  pointer-events: none;
+}
+.intro-petal--1 { left: 18%; } .intro-petal--2 { left: 50%; } .intro-petal--3 { left: 80%; }
+.is-playing .intro-petal--1 { animation: introFall 3s ease-in 1.9s forwards; }
+.is-playing .intro-petal--2 { animation: introFall 3s ease-in 2.2s forwards; }
+.is-playing .intro-petal--3 { animation: introFall 3s ease-in 2.5s forwards; }
+
+@keyframes introDraw     { to { stroke-dashoffset: 0; } }
+@keyframes introBloom    { to { transform: scale(70); opacity: 0; } }
+@keyframes introVeilFade { to { opacity: 0; } }
+@keyframes introFall {
+  0%   { opacity: 0; transform: translateY(0) rotate(0); }
+  10%  { opacity: .9; }
+  100% { opacity: 0; transform: translateY(105vh) rotate(360deg); }
+}
+
+/* ===== Countdown soft tick (respects reduced motion) ===== */
+@media (prefers-reduced-motion: no-preference) {
+  .cd-num.tick { animation: introTick .3s ease; }
+}
+@keyframes introTick { 0% { opacity: .35; } 100% { opacity: 1; } }
+
+/* ===== Reduced-motion safety net (does not rely on JS) ===== */
+@media (prefers-reduced-motion: reduce) {
+  .intro-overlay { display: none !important; }
+  .intro-mandala circle, .intro-mandala path,
+  .intro-bloom, .intro-petal { animation: none !important; }
+  html.js-anim [data-reveal],
+  html.js-anim .hero .deity,
+  html.js-anim .hero .names,
+  html.js-anim .hero .tagline,
+  html.js-anim .hero .countdown { opacity: 1 !important; transform: none !important; }
+}

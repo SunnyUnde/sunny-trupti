@@ -96,6 +96,7 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .row:last-child { border-bottom: 0; }
 .k { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
 .v { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); }
+.venue-link { color: var(--maroon); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
 
 /* 4. RSVP */
 .rsvp { background: var(--ivory); }
