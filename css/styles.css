@@ -138,20 +138,13 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .v { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); }
 .venue-link { color: var(--maroon); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
 
-/* 4. RSVP */
-.rsvp { background: var(--ivory); }
-.rsvp-text {
-  font-size: 14px; line-height: 1.7; color: var(--text);
-  max-width: 320px; margin: 12px auto 0;
-}
-
-/* 5. Venue */
+/* 4. Venue */
 .venue { background: var(--ivory-2); }
 .venue-name {
   font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); margin-top: 6px;
 }
 
-/* 6. Footer */
+/* 5. Footer */
 .site-footer { background: var(--maroon); color: #f7e9d0; }
 .footer-amp { font-size: 50px; color: #f7e9d0; }
 .footer-line { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 18px; margin-top: 6px; }
