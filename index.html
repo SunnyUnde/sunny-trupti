@@ -14,6 +14,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
 
   <!-- Open Graph (WhatsApp, Facebook, LinkedIn) -->
   <meta property="og:type" content="website">
@@ -75,7 +76,7 @@
   </div>
 
   <div class="intro-overlay" id="intro" aria-hidden="true">
-    <button class="intro-skip" id="introSkip" type="button" aria-label="Skip intro">Skip &times;</button>
+    <button class="intro-skip" id="introSkip" type="button" aria-label="Skip intro" data-en="Skip ✕" data-mr="वगळा ✕">वगळा ✕</button>
     <svg class="intro-mandala" viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="10"/>
       <path d="M50 4 L50 96 M4 50 L96 50 M18 18 L82 82 M82 18 L18 82"/>
@@ -108,6 +109,7 @@
         <div class="cd-unit"><span class="cd-num" data-cd-minutes>—</span><span class="cd-label" data-en="Min" data-mr="मिनिटे">मिनिटे</span></div>
         <div class="cd-unit"><span class="cd-num" data-cd-seconds>—</span><span class="cd-label" data-en="Sec" data-mr="सेकंद">सेकंद</span></div>
       </div>
+      <p class="countdown-done" hidden data-en="The day is here! 🎉" data-mr="आजचा दिवस आला आहे! 🎉">आजचा दिवस आला आहे! 🎉</p>
     </section>
 
     <!-- 2. INVITE NOTE -->
@@ -124,6 +126,14 @@
         <div class="row"><span class="k" data-en="Date" data-mr="दिनांक">दिनांक</span><span class="v" data-en="Saturday, 4 July 2026" data-mr="शनिवार, ४ जुलै २०२६">शनिवार, ४ जुलै २०२६</span></div>
         <div class="row"><span class="k" data-en="Time" data-mr="वेळ">वेळ</span><span class="v" data-en="11:00 AM onwards" data-mr="सकाळी ११:०० वाजल्यापासून">सकाळी ११:०० वाजल्यापासून</span></div>
         <div class="row"><span class="k" data-en="Venue" data-mr="स्थळ">स्थळ</span><a class="v venue-link" href="https://maps.app.goo.gl/fGAaMpEKnboMTv9Y6" target="_blank" rel="noopener" data-en="Davkhar Mangal Karyalay" data-mr="डावखर मंगल कार्यालय">डावखर मंगल कार्यालय</a></div>
+      </div>
+      <p class="cal-label" data-en="Add to your calendar" data-mr="आपल्या कॅलेंडरमध्ये जोडा">आपल्या कॅलेंडरमध्ये जोडा</p>
+      <div class="cal-actions">
+        <a class="btn btn-cal" target="_blank" rel="noopener"
+           href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Sunny%20%26%20Trupti%20%E2%80%94%20Engagement%20Ceremony&amp;dates=20260704T053000Z/20260704T083000Z&amp;details=Join%20us%20as%20Sunny%20%26%20Trupti%20exchange%20rings.%20https%3A%2F%2Fsunnyandtrupti.com&amp;location=Davkhar%20Mangal%20Karyalay"
+           data-en="Google Calendar" data-mr="गूगल कॅलेंडर">गूगल कॅलेंडर</a>
+        <a class="btn btn-cal" href="/event.ics" download
+           data-en="Apple / Outlook" data-mr="Apple / Outlook">Apple / Outlook</a>
       </div>
     </section>
 

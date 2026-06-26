@@ -46,12 +46,20 @@
       s: document.querySelector('[data-cd-seconds]')
     };
     if (!el.d) return;
+    var timer = null;
     function tick() {
       last = getRemaining(target, Date.now());
       render();
+      if (target - Date.now() <= 0) {
+        if (timer) clearInterval(timer);
+        var cd = document.querySelector('.countdown');
+        var done = document.querySelector('.countdown-done');
+        if (cd) cd.hidden = true;
+        if (done) done.hidden = false;
+      }
     }
     tick();
-    setInterval(tick, 1000);
+    timer = setInterval(tick, 1000);
   }
 
   if (typeof module !== 'undefined' && module.exports) {

@@ -2,10 +2,11 @@
   --ivory: #f7f1e6;
   --ivory-2: #f1e7d3;
   --maroon: #7a1f2b;
-  --gold: #c39b46;
+  --gold: #c39b46;        /* decorative strokes & lines (mandala, divider rules) */
   --gold-soft: #a9853f;
+  --gold-ink: #856312;    /* readable warm gold for small text — WCAG AA */
   --text: #5a2a2a;
-  --muted: #9a7b4f;
+  --muted: #7a6033;       /* readable muted for small labels — WCAG AA */
   --max: 480px;
 }
 
@@ -35,7 +36,8 @@ html[lang="mr"] .note-text,
 html[lang="mr"] .v,
 html[lang="mr"] .cd-num,
 html[lang="mr"] .footer-line,
-html[lang="mr"] .venue-name {
+html[lang="mr"] .venue-name,
+html[lang="mr"] .countdown-done {
   font-family: 'Tiro Devanagari Marathi', 'Cormorant Garamond', Georgia, serif;
 }
 /* …and for the small uppercase labels, which read poorly when letter-spaced + uppercased in Devanagari */
@@ -44,6 +46,7 @@ html[lang="mr"] .label,
 html[lang="mr"] .tagline,
 html[lang="mr"] .k,
 html[lang="mr"] .cd-label,
+html[lang="mr"] .cal-label,
 html[lang="mr"] .btn,
 html[lang="mr"] .footer-meta {
   font-family: 'Tiro Devanagari Marathi', 'Montserrat', sans-serif;
@@ -67,7 +70,7 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .divider {
   display: inline-flex; align-items: center; gap: 10px;
   font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 10px;
+  color: var(--gold-ink); margin-bottom: 10px;
 }
 .divider::before, .divider::after {
   content: ""; width: 34px; height: 1px; background: var(--gold); opacity: .6;
@@ -95,7 +98,7 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .mandala { width: 80px; height: 80px; margin: 0 auto 16px; opacity: .7; display: block; }
 .deity {
   font-family: 'Tiro Devanagari Marathi', serif;
-  font-size: 15px; color: var(--gold-soft); letter-spacing: normal; margin-bottom: 22px;
+  font-size: 15px; color: var(--gold-ink); letter-spacing: normal; margin-bottom: 22px;
 }
 .names {
   font-family: 'Cormorant Garamond', Georgia, serif;
@@ -106,6 +109,7 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
   letter-spacing: 4px; text-transform: uppercase; font-size: 11px; color: var(--muted); margin-top: 16px;
 }
 .countdown { display: flex; justify-content: center; gap: 16px; margin-top: 30px; }
+.countdown[hidden] { display: none; }
 .cd-unit { display: flex; flex-direction: column; min-width: 56px; }
 .cd-num {
   font-family: 'Cormorant Garamond', Georgia, serif;
@@ -114,6 +118,11 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .cd-label {
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px;
 }
+.countdown-done {
+  margin-top: 30px; font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px; font-weight: 600; color: var(--maroon);
+}
+.countdown-done[hidden] { display: none; }
 
 /* 2. Note */
 .note { background: var(--ivory-2); }
@@ -137,6 +146,13 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .k { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
 .v { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); }
 .venue-link { color: var(--maroon); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+
+/* Add to calendar */
+.cal-label {
+  margin-top: 24px; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
+}
+.cal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.btn-cal { margin-top: 0; font-size: 10px; padding: 10px 20px; }
 
 /* 4. Venue */
 .venue { background: var(--ivory-2); }

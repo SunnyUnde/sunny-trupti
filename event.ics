@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//sunnyandtrupti.com//Engagement//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:engagement-2026-07-04@sunnyandtrupti.com
+DTSTAMP:20260626T060000Z
+DTSTART:20260704T053000Z
+DTEND:20260704T083000Z
+SUMMARY:Sunny & Trupti — Engagement Ceremony
+DESCRIPTION:Join us as Sunny & Trupti exchange rings. https://sunnyandtrupti.com
+LOCATION:Davkhar Mangal Karyalay
+URL:https://sunnyandtrupti.com
+END:VEVENT
+END:VCALENDAR
