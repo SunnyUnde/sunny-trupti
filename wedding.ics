@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//sunnyandtrupti.com//Wedding//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:wedding-2027-01-24@sunnyandtrupti.com
+DTSTAMP:20260708T000000Z
+DTSTART;VALUE=DATE:20270124
+DTEND;VALUE=DATE:20270125
+SUMMARY:Sunny & Trupti — Wedding
+DESCRIPTION:Join us as Sunny & Trupti get married. Venue & timings to be announced. https://sunnyandtrupti.com
+URL:https://sunnyandtrupti.com/
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

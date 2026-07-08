@@ -160,6 +160,31 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
   font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); margin-top: 6px;
 }
 
+/* Background music toggle */
+.music-toggle {
+  position: fixed; bottom: 16px; right: 16px; z-index: 60;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(247, 241, 230, .92); border: 1px solid var(--gold);
+  color: var(--maroon); font-size: 18px; line-height: 1; cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.music-toggle[hidden] { display: none; }
+.music-toggle:hover { background: var(--gold); color: #fff; }
+/* default (not playing) reads as muted: a slash across the note */
+.music-toggle::after {
+  content: ""; position: absolute; width: 26px; height: 1.5px;
+  background: currentColor; transform: rotate(-45deg);
+}
+.music-toggle.is-playing::after { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .music-toggle.is-playing { animation: musicPulse 1.8s ease-in-out infinite; }
+}
+@keyframes musicPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(195, 155, 70, .5); }
+  50%      { box-shadow: 0 0 0 7px rgba(195, 155, 70, 0); }
+}
+
 /* 5. Footer */
 .site-footer { background: var(--maroon); color: #f7e9d0; }
 .footer-amp { font-size: 50px; color: #f7e9d0; }
@@ -167,6 +192,11 @@ section, .site-footer { padding: 60px 30px; text-align: center; }
 .footer-meta {
   font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-top: 18px; opacity: .7;
 }
+.footer-back {
+  color: #f7e9d0; text-decoration: underline;
+  text-decoration-color: var(--gold); text-underline-offset: 3px;
+}
+.footer-back:hover { color: #fff; }
 
 @media (min-width: 481px) {
   .page { box-shadow: 0 24px 70px rgba(0,0,0,.12); }

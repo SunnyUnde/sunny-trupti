@@ -38,7 +38,9 @@
   }
 
   function start() {
-    var target = new Date('2026-07-04T11:00:00+05:30').getTime();
+    var cdEl = document.querySelector('.countdown');
+    var attr = cdEl && cdEl.getAttribute('data-target');
+    var target = new Date(attr || '2026-07-04T11:00:00+05:30').getTime();
     el = {
       d: document.querySelector('[data-cd-days]'),
       h: document.querySelector('[data-cd-hours]'),
