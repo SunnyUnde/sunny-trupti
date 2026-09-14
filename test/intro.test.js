@@ -9,3 +9,15 @@ test('plays the intro when motion is not reduced', () => {
 test('skips the intro when the user prefers reduced motion', () => {
   assert.strictEqual(shouldPlayIntro(true), false);
 });
+
+test('skips the intro when it has already played this session', () => {
+  assert.strictEqual(shouldPlayIntro(false, true), false);
+});
+
+test('plays the intro on a fresh session with motion allowed', () => {
+  assert.strictEqual(shouldPlayIntro(false, false), true);
+});
+
+test('reduced motion wins even on a fresh session', () => {
+  assert.strictEqual(shouldPlayIntro(true, false), false);
+});

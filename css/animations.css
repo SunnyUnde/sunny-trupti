@@ -1,6 +1,6 @@
-/* ===== Engagement site — animation layer (progressive enhancement) ===== */
+/* ===== Animation layer (progressive enhancement) ===== */
 
-/* Scroll reveals — hidden only once JS marks the page animation-capable */
+/* Scroll reveals - hidden only once JS marks the page animation-capable */
 html.js-anim [data-reveal] { opacity: 0; transform: translateY(16px); }
 html.js-anim [data-reveal].in {
   opacity: 1; transform: none;
@@ -18,23 +18,50 @@ html.js-anim.intro-done .hero .tagline  { animation: introFadeUp .8s ease .35s f
 html.js-anim.intro-done .hero .countdown{ animation: introFadeUp .8s ease .5s forwards; }
 @keyframes introFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
+/* The details card arrives with a slight scale, the footer ampersand with a
+   slower one. Previously every revealed block did the same 16px fade-up. */
+html.js-anim [data-reveal] .card { opacity: 0; transform: scale(.97); }
+html.js-anim [data-reveal].in .card {
+  opacity: 1; transform: none;
+  transition: opacity .6s ease .15s, transform .6s cubic-bezier(.16, 1, .3, 1) .15s;
+}
+.footer-amp { display: inline-block; }
+html.js-anim [data-reveal] .footer-amp { opacity: 0; transform: translateY(10px) scale(.9); }
+html.js-anim [data-reveal].in .footer-amp {
+  opacity: 1; transform: none;
+  transition: opacity .9s ease .1s, transform .9s cubic-bezier(.16, 1, .3, 1) .1s;
+}
+
+/* The gold rules draw outward from the label they flank, marking the one
+   section opening that survived the label cull. scaleX, not width, so it
+   stays on the compositor. */
+html.js-anim .divider::before { transform-origin: right center; }
+html.js-anim .divider::after  { transform-origin: left center; }
+html.js-anim [data-reveal] .divider::before,
+html.js-anim [data-reveal] .divider::after { transform: scaleX(0); }
+html.js-anim [data-reveal].in .divider::before,
+html.js-anim [data-reveal].in .divider::after {
+  transform: scaleX(1);
+  transition: transform .7s cubic-bezier(.16, 1, .3, 1) .25s;
+}
+
 /* ===== Intro overlay ===== */
 .intro-overlay {
   display: none;
   position: fixed; inset: 0; z-index: 1000;
   align-items: center; justify-content: center;
-  background: linear-gradient(180deg, #faf4e9, var(--ivory));
+  background: linear-gradient(180deg, var(--hero-top), var(--ivory));
   overflow: hidden;
 }
 .intro-overlay.is-playing { display: flex; animation: introVeilFade .6s ease 1.9s forwards; }
 
 .intro-skip {
   position: absolute; top: 16px; right: 16px; z-index: 1002;
-  background: transparent; border: 1px solid var(--gold); color: var(--maroon);
+  background: transparent; border: 1px solid var(--gold); color: var(--maroon-ink);
   border-radius: 24px; padding: 7px 16px; font-size: 11px; letter-spacing: 1px;
-  text-transform: uppercase; cursor: pointer; font-family: 'Montserrat', sans-serif;
+  cursor: pointer; font-family: var(--font-body);
 }
-.intro-skip:hover { background: var(--gold); color: #fff; }
+.intro-skip:hover { background: var(--gold); color: var(--ivory); }
 
 .intro-mandala { width: 150px; height: 150px; }
 .intro-mandala circle, .intro-mandala path {
@@ -49,11 +76,12 @@ html.js-anim.intro-done .hero .countdown{ animation: introFadeUp .8s ease .5s fo
 }
 .is-playing .intro-bloom { animation: introBloom 1s ease 1.3s forwards; }
 
-.intro-petal {
-  position: absolute; top: -24px; width: 10px; height: 14px;
-  background: #e3a14b; border-radius: 60% 60% 60% 60% / 80% 80% 40% 40%; opacity: 0; z-index: 1003;
+.intro-petal, .hero-petal {
+  position: absolute; width: 10px; height: 14px;
+  background: #e3a14b; border-radius: 60% 60% 60% 60% / 80% 80% 40% 40%; opacity: 0;
   pointer-events: none;
 }
+.intro-petal { top: -24px; z-index: 1003; }
 .intro-petal--1 { left: 18%; } .intro-petal--2 { left: 50%; } .intro-petal--3 { left: 80%; }
 .is-playing .intro-petal--1 { animation: introFall 3s ease-in 1.9s forwards; }
 .is-playing .intro-petal--2 { animation: introFall 3s ease-in 2.2s forwards; }
@@ -68,20 +96,41 @@ html.js-anim.intro-done .hero .countdown{ animation: introFadeUp .8s ease .5s fo
   100% { opacity: 0; transform: translateY(105vh) rotate(360deg); }
 }
 
-/* ===== Countdown soft tick (respects reduced motion) ===== */
+/* ===== Hero petal drift =====
+   The intro spends the petals in the first three seconds behind a veil most
+   guests see once. These three carry the motif through the page instead.
+   Three elements, transform and opacity only, clipped by the hero. */
+.hero { position: relative; overflow: hidden; }
+.hero-petal { top: -20px; opacity: 0; }
+.hero-petal--1 { left: 14%; }
+.hero-petal--2 { left: 52%; width: 8px; height: 11px; }
+.hero-petal--3 { left: 83%; }
 @media (prefers-reduced-motion: no-preference) {
-  .cd-num.tick { animation: introTick .3s ease; }
+  .hero-petal--1 { animation: heroDrift 15s linear 1s infinite; }
+  .hero-petal--2 { animation: heroDrift 19s linear 6s infinite; }
+  .hero-petal--3 { animation: heroDrift 17s linear 11s infinite; }
 }
-@keyframes introTick { 0% { opacity: .35; } 100% { opacity: 1; } }
+@keyframes heroDrift {
+  0%   { opacity: 0;   transform: translate(0, 0) rotate(0deg); }
+  12%  { opacity: .28; }
+  50%  { transform: translate(14px, 260px) rotate(180deg); }
+  88%  { opacity: .28; }
+  100% { opacity: 0;   transform: translate(-6px, 520px) rotate(360deg); }
+}
 
 /* ===== Reduced-motion safety net (does not rely on JS) ===== */
 @media (prefers-reduced-motion: reduce) {
   .intro-overlay { display: none !important; }
   .intro-mandala circle, .intro-mandala path,
-  .intro-bloom, .intro-petal { animation: none !important; }
+  .intro-bloom, .intro-petal, .hero-petal { animation: none !important; }
+  .hero-petal { display: none !important; }
   html.js-anim [data-reveal],
   html.js-anim .hero .deity,
   html.js-anim .hero .names,
   html.js-anim .hero .tagline,
-  html.js-anim .hero .countdown { opacity: 1 !important; transform: none !important; }
+  html.js-anim .hero .countdown,
+  html.js-anim [data-reveal] .card,
+  html.js-anim [data-reveal] .footer-amp,
+  html.js-anim [data-reveal] .divider::before,
+  html.js-anim [data-reveal] .divider::after { opacity: 1 !important; transform: none !important; }
 }

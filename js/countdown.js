@@ -12,62 +12,126 @@
   }
 
   var DEVANAGARI = '०१२३४५६७८९';
-  function localizeDigits(str) {
-    if (typeof document === 'undefined') return str;
-    if (document.documentElement.getAttribute('lang') !== 'mr') return str;
-    return str.replace(/[0-9]/g, function (d) { return DEVANAGARI.charAt(d); });
+
+  // Pure: takes the remaining parts and the active language, returns the three
+  // strings the hero shows. Seconds are computed but not displayed; the wedding
+  // is months away, so a ticking seconds column was noise plus a repaint a
+  // second, forever.
+  function formatUnits(remaining, lang) {
+    function render(n) {
+      var s = String(n).padStart(2, '0');
+      return lang === 'mr'
+        ? s.replace(/[0-9]/g, function (d) { return DEVANAGARI.charAt(d); })
+        : s;
+    }
+    return {
+      days: render(remaining.days),
+      hours: render(remaining.hours),
+      minutes: render(remaining.minutes)
+    };
   }
 
-  function pad(n) { return String(n).padStart(2, '0'); }
+  // Standard ease-out. The number decelerates into its final value instead of
+  // stopping dead, which is what makes a count-up read as arrival.
+  function easeOutCubic(t) {
+    var c = 1 - Math.min(1, Math.max(0, t));
+    return 1 - c * c * c;
+  }
+
+  var COUNT_UP_MS = 700;
+
+  // The tween is an enhancement, never the thing that puts the number on
+  // screen. requestAnimationFrame does not tick in a hidden tab and is
+  // throttled in some Android WebViews, so decide up front and keep a
+  // guaranteed paint on the other branch.
+  function shouldCountUp(reduced, hasRaf, hidden) {
+    return !reduced && hasRaf && !hidden;
+  }
 
   var el = null;
   var last = null;
 
-  function render() {
+  function paint() {
     if (!el || !el.d || !last) return;
-    el.d.textContent = localizeDigits(pad(last.days));
-    el.h.textContent = localizeDigits(pad(last.hours));
-    el.m.textContent = localizeDigits(pad(last.minutes));
-    var s = localizeDigits(pad(last.seconds));
-    if (el.s.textContent !== s) {
-      el.s.textContent = s;
-      el.s.classList.remove('tick');
-      void el.s.offsetWidth; // force reflow so the animation restarts
-      el.s.classList.add('tick');
+    var out = formatUnits(last, document.documentElement.getAttribute('lang'));
+    el.d.textContent = out.days;
+    el.h.textContent = out.hours;
+    el.m.textContent = out.minutes;
+  }
+
+  // Rolls the three numbers up from zero once the hero is actually on screen.
+  // Motivation: it is the only number on the page that matters, so it gets the
+  // one piece of motion that draws the eye. Skipped entirely under reduced motion.
+  function countUp() {
+    var target = last;
+    var reduced = false;
+    try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    var hidden = typeof document.visibilityState === 'string' && document.visibilityState === 'hidden';
+    if (!target || !shouldCountUp(reduced, typeof requestAnimationFrame === 'function', hidden)) {
+      paint();
+      return;
     }
+    // If the tween never completes, land the real value anyway.
+    var guard = setTimeout(function () { last = target; paint(); }, COUNT_UP_MS + 400);
+    var t0 = null;
+    function frame(ts) {
+      if (t0 === null) t0 = ts;
+      var p = (ts - t0) / COUNT_UP_MS;
+      var e = easeOutCubic(p);
+      last = {
+        days: Math.round(target.days * e),
+        hours: Math.round(target.hours * e),
+        minutes: Math.round(target.minutes * e),
+        seconds: target.seconds
+      };
+      paint();
+      if (p < 1) { requestAnimationFrame(frame); }
+      else { clearTimeout(guard); last = target; paint(); }
+    }
+    requestAnimationFrame(frame);
   }
 
   function start() {
     var cdEl = document.querySelector('.countdown');
     var attr = cdEl && cdEl.getAttribute('data-target');
-    var target = new Date(attr || '2026-07-04T11:00:00+05:30').getTime();
+    var target = new Date(attr || '2027-01-24T00:00:00+05:30').getTime();
     el = {
       d: document.querySelector('[data-cd-days]'),
       h: document.querySelector('[data-cd-hours]'),
-      m: document.querySelector('[data-cd-minutes]'),
-      s: document.querySelector('[data-cd-seconds]')
+      m: document.querySelector('[data-cd-minutes]')
     };
     if (!el.d) return;
     var timer = null;
     function tick() {
       last = getRemaining(target, Date.now());
-      render();
+      paint();
       if (target - Date.now() <= 0) {
         if (timer) clearInterval(timer);
-        var cd = document.querySelector('.countdown');
         var done = document.querySelector('.countdown-done');
-        if (cd) cd.hidden = true;
+        if (cdEl) cdEl.hidden = true;
         if (done) done.hidden = false;
       }
     }
-    tick();
-    timer = setInterval(tick, 1000);
+    last = getRemaining(target, Date.now());
+    // Wait for the intro veil to lift, or run anyway if intro.js never reports in.
+    var fired = false;
+    function go() {
+      if (fired) return;
+      fired = true;
+      countUp();
+      timer = setInterval(tick, 30000);
+    }
+    document.addEventListener('intro:done', go);
+    setTimeout(go, 3000);
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { getRemaining: getRemaining };
+    module.exports = {
+      getRemaining: getRemaining, formatUnits: formatUnits,
+      easeOutCubic: easeOutCubic, shouldCountUp: shouldCountUp
+    };
   } else {
-    root.Countdown = { getRemaining: getRemaining, refresh: render };
+    root.Countdown = { getRemaining: getRemaining, refresh: paint };
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', start);
     } else {

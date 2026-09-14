@@ -1,179 +1,247 @@
+/* ===== Tokens =====
+   Every colour and font the pages use lives here. Two overrides swap the whole
+   look: html[lang="mr"] swaps the two font tokens, and the dark-mode block at
+   the bottom swaps the colour tokens. Nothing else needs to know about either. */
 :root {
-  --ivory: #f7f1e6;
-  --ivory-2: #f1e7d3;
-  --maroon: #7a1f2b;
-  --gold: #c39b46;        /* decorative strokes & lines (mandala, divider rules) */
-  --gold-soft: #a9853f;
-  --gold-ink: #856312;    /* readable warm gold for small text — WCAG AA */
+  /* Lets the browser theme scrollbars and form controls with the page
+     instead of leaving light chrome on the dark palette below. */
+  color-scheme: light dark;
+
+  /* Type. Devanagari substitutes in one place, below, instead of per rule. */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Montserrat', system-ui, sans-serif;
+
+  /* Surfaces */
+  --ivory: #f7f1e6;       /* page ground */
+  --ivory-2: #f1e7d3;     /* alternating section ground */
+  --hero-top: #faf4e9;    /* top of the hero gradient, also the intro veil */
+  --surface: #fff;        /* the details card */
+  --rule: #e6d8bd;        /* hairlines and card borders */
+  --field: #ece0c9;       /* the ground the card sits on above 480px */
+
+  /* Brand */
+  --maroon: #7a1f2b;      /* brand fill: footer, button hover, active toggle */
+  --maroon-ink: #7a1f2b;  /* brand text: names, titles. Lightens in dark mode. */
+  --on-maroon: #f7e9d0;   /* text sitting on a maroon fill */
+  --gold: #c39b46;        /* decorative strokes: mandala, divider rules */
+  --gold-ink: #856312;    /* readable warm gold for small text, WCAG AA */
+
+  /* Ink */
   --text: #5a2a2a;
-  --muted: #7a6033;       /* readable muted for small labels — WCAG AA */
+  --muted: #7a6033;       /* readable muted for small labels, WCAG AA */
+  --note-ink: #6a3a30;    /* the italic invitation note */
+
+  --chrome-bg: rgba(247, 241, 230, .92);   /* the floating language pill */
+  --card-shadow: 0 8px 24px rgba(122, 31, 43, .06);
+  --page-shadow: 0 24px 70px rgba(0, 0, 0, .12);
+
+  /* Vertical rhythm. Sections are deliberately unequal: the hero and the venue
+     breathe, the note sits tight as an aside, the details card is the dense
+     moment. A single uniform value read as an unfinished template. */
+  --pad-x: 30px;
   --max: 480px;
+}
+
+/* Devanagari needs one font for everything, so both tokens point at it. The
+   Latin fallbacks stay behind it for any string that is still English. */
+html[lang="mr"] {
+  --font-display: 'Tiro Devanagari Marathi', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Tiro Devanagari Marathi', 'Montserrat', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Language switch */
-.lang-switch {
-  position: fixed; top: 14px; left: 14px; z-index: 50;
-  display: inline-flex; gap: 2px;
-  background: rgba(247, 241, 230, .92);
-  border: 1px solid var(--gold);
-  border-radius: 30px; padding: 3px;
-}
-.lang-switch button {
-  font-family: 'Tiro Devanagari Marathi', 'Montserrat', sans-serif;
-  font-size: 12px; line-height: 1; cursor: pointer;
-  border: 0; background: transparent; color: var(--maroon);
-  padding: 6px 13px; border-radius: 30px;
-  transition: background .2s, color .2s;
-}
-.lang-switch button[aria-pressed="true"] { background: var(--maroon); color: var(--ivory); }
-
-/* Marathi typography — Devanagari for the elegant serif headings… */
-html[lang="mr"] .names,
-html[lang="mr"] .title,
-html[lang="mr"] .note-text,
-html[lang="mr"] .v,
-html[lang="mr"] .cd-num,
-html[lang="mr"] .footer-line,
-html[lang="mr"] .venue-name,
-html[lang="mr"] .countdown-done {
-  font-family: 'Tiro Devanagari Marathi', 'Cormorant Garamond', Georgia, serif;
-}
-/* …and for the small uppercase labels, which read poorly when letter-spaced + uppercased in Devanagari */
-html[lang="mr"] .divider,
-html[lang="mr"] .label,
-html[lang="mr"] .tagline,
-html[lang="mr"] .k,
-html[lang="mr"] .cd-label,
-html[lang="mr"] .cal-label,
-html[lang="mr"] .btn,
-html[lang="mr"] .footer-meta {
-  font-family: 'Tiro Devanagari Marathi', 'Montserrat', sans-serif;
-  text-transform: none;
-  letter-spacing: normal; /* Devanagari conjuncts/matras break apart with any letter-spacing */
-}
-
 body {
   background: var(--ivory);
   color: var(--text);
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-weight: 300;
   line-height: 1.6;
 }
 
 .page { max-width: var(--max); margin: 0 auto; }
 
-section, .site-footer { padding: 60px 30px; text-align: center; }
+section, .site-footer { padding: 60px var(--pad-x); text-align: center; }
+
+/* Small caps treatment. Applied only where a label genuinely earns one, and
+   neutralised for Devanagari in a single rule: conjuncts and matras break
+   apart under any letter-spacing, and Devanagari has no uppercase at all. */
+.caps { text-transform: uppercase; letter-spacing: .22em; }
+html[lang="mr"] .caps { text-transform: none; letter-spacing: normal; }
+
+/* Language switch */
+.lang-switch {
+  position: fixed; top: 14px; left: 14px; z-index: 50;
+  display: inline-flex; gap: 2px;
+  background: var(--chrome-bg);
+  border: 1px solid var(--gold);
+  border-radius: 30px; padding: 3px;
+}
+.lang-switch button {
+  font-family: var(--font-body);
+  font-size: 12px; line-height: 1; cursor: pointer;
+  border: 0; background: transparent; color: var(--maroon-ink);
+  padding: 6px 13px; border-radius: 30px;
+  transition: background .2s, color .2s;
+}
+.lang-switch button[aria-pressed="true"] { background: var(--maroon); color: var(--on-maroon); }
 
 /* Shared bits */
 .divider {
   display: inline-flex; align-items: center; gap: 10px;
-  font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--gold-ink); margin-bottom: 10px;
+  font-size: 12px; color: var(--gold-ink); margin-bottom: 10px;
 }
 .divider::before, .divider::after {
   content: ""; width: 34px; height: 1px; background: var(--gold); opacity: .6;
 }
+/* Sentence-cased lead-in above the invitation note. Reads as the opening
+   clause it is, rather than as another uppercase section tag. */
 .label {
-  font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 15px; font-style: italic; color: var(--muted);
 }
 .title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 600; font-size: 30px; color: var(--maroon); margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-weight: 600; font-size: 30px; color: var(--maroon-ink); margin-bottom: 6px;
 }
 .amp { font-family: 'Tangerine', cursive; color: var(--gold); }
 
 .btn {
   display: inline-block; margin-top: 20px;
-  font-weight: 500; letter-spacing: 2px; text-transform: uppercase; font-size: 11px;
-  color: var(--maroon); text-decoration: none;
-  border: 1.5px solid var(--maroon); border-radius: 30px; padding: 12px 28px;
-  transition: background .2s, color .2s;
+  font-weight: 500; font-size: 11px;
+  color: var(--maroon-ink); text-decoration: none;
+  border: 1.5px solid var(--maroon-ink); border-radius: 30px; padding: 12px 28px;
+  transition: background .2s, color .2s, transform .15s;
 }
-.btn:hover { background: var(--maroon); color: var(--ivory); }
+.btn:hover { background: var(--maroon); color: var(--on-maroon); }
+.btn:active { transform: translateY(1px); }
 
 /* 1. Hero */
-.hero { padding-top: 56px; background: linear-gradient(180deg, #faf4e9, var(--ivory)); }
-.mandala { width: 80px; height: 80px; margin: 0 auto 16px; opacity: .7; display: block; }
+.hero {
+  padding-top: 56px; padding-bottom: 76px;
+  background: linear-gradient(180deg, var(--hero-top), var(--ivory));
+}
+.mandala {
+  width: 80px; height: 80px; margin: 0 auto 16px;
+  opacity: .7; display: block; color: var(--gold);
+}
 .deity {
   font-family: 'Tiro Devanagari Marathi', serif;
-  font-size: 15px; color: var(--gold-ink); letter-spacing: normal; margin-bottom: 22px;
+  font-size: 15px; color: var(--gold-ink); margin-bottom: 22px;
 }
 .names {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 500; font-size: 60px; line-height: 1; color: var(--maroon);
+  font-family: var(--font-display);
+  font-weight: 500; font-size: 60px; line-height: 1; color: var(--maroon-ink);
 }
 .names .amp { font-size: 70px; display: block; margin: -8px 0; }
+/* The predicate of the headline, so it is set as running text rather than as
+   an uppercase tag. On the engagement page it carries the date instead. */
 .tagline {
-  letter-spacing: 4px; text-transform: uppercase; font-size: 11px; color: var(--muted); margin-top: 16px;
+  font-family: var(--font-display);
+  font-size: 19px; color: var(--muted); margin-top: 14px;
 }
-.countdown { display: flex; justify-content: center; gap: 16px; margin-top: 30px; }
+.countdown { display: flex; justify-content: center; gap: 22px; margin-top: 32px; }
 .countdown[hidden] { display: none; }
 .cd-unit { display: flex; flex-direction: column; min-width: 56px; }
 .cd-num {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 600; font-size: 30px; line-height: 1; color: var(--maroon);
+  font-family: var(--font-display);
+  font-weight: 600; font-size: 32px; line-height: 1; color: var(--maroon-ink);
+  font-variant-numeric: tabular-nums;
 }
 .cd-label {
-  font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px;
+  font-size: 9px; color: var(--muted); margin-top: 6px;
 }
 .countdown-done {
-  margin-top: 30px; font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 26px; font-weight: 600; color: var(--maroon);
+  margin-top: 30px; font-family: var(--font-display);
+  font-size: 26px; font-weight: 600; color: var(--maroon-ink);
 }
 .countdown-done[hidden] { display: none; }
 
-/* 2. Note */
-.note { background: var(--ivory-2); }
+/* 2. Note. Tighter than its neighbours on purpose: it is a quiet aside
+   between the announcement and the logistics. */
+.note { background: var(--ivory-2); padding-block: 48px; }
 .note-text {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-style: italic; font-size: 21px; line-height: 1.6; color: #6a3a30;
-  max-width: 340px; margin: 14px auto 0;
+  font-family: var(--font-display);
+  font-style: italic; font-size: 21px; line-height: 1.6; color: var(--note-ink);
+  max-width: 340px; margin: 12px auto 0;
 }
 
-/* 3. Details */
+/* 3. Details. The page's one dense block, so it gets the most room. */
+.details { padding-block: 68px; }
 .card {
-  background: #fff; border: 1px solid #e6d8bd; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
   padding: 12px 24px; margin-top: 18px; text-align: left;
-  box-shadow: 0 8px 24px rgba(122, 31, 43, .06);
+  box-shadow: var(--card-shadow);
 }
 .row {
   display: flex; flex-direction: column; gap: 3px;
-  padding: 14px 0; border-bottom: 1px dashed #e6d8bd;
+  padding: 14px 0; border-bottom: 1px dashed var(--rule);
 }
 .row:last-child { border-bottom: 0; }
-.k { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
-.v { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); }
-.venue-link { color: var(--maroon); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+.k { font-size: 10px; color: var(--muted); }
+.v { font-family: var(--font-display); font-size: 22px; color: var(--text); }
+.venue-link { color: var(--maroon-ink); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
 
-/* Add to calendar */
-.cal-label {
-  margin-top: 24px; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
-}
-.cal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+/* Add to calendar. The two button labels say what they are, so the row needs
+   no heading above it. */
+.cal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
 .btn-cal { margin-top: 0; font-size: 10px; padding: 10px 20px; }
 
 /* 4. Venue */
-.venue { background: var(--ivory-2); }
+.venue { background: var(--ivory-2); padding-block: 72px; }
 .venue-name {
-  font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--text); margin-top: 6px;
+  font-family: var(--font-display); font-size: 22px; color: var(--text); margin-top: 6px;
 }
 
 /* 5. Footer */
-.site-footer { background: var(--maroon); color: #f7e9d0; }
-.footer-amp { font-size: 50px; color: #f7e9d0; }
-.footer-line { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 18px; margin-top: 6px; }
+.site-footer { background: var(--maroon); color: var(--on-maroon); padding-block: 56px; }
+.footer-amp { font-size: 50px; color: var(--on-maroon); }
+.footer-line { font-family: var(--font-display); font-size: 18px; margin-top: 6px; }
 .footer-meta {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-top: 18px; opacity: .7;
+  font-size: 10px; margin-top: 18px; opacity: .75;
 }
 .footer-back {
-  color: #f7e9d0; text-decoration: underline;
+  color: var(--on-maroon); text-decoration: underline;
   text-decoration-color: var(--gold); text-underline-offset: 3px;
 }
 .footer-back:hover { color: #fff; }
 
+/* Above phone width the invitation stays a 480px card. It now sits on a warm
+   field rather than floating on the same ivory as itself, so the edge reads as
+   deliberate instead of as a page that failed to fill the window. */
 @media (min-width: 481px) {
-  .page { box-shadow: 0 24px 70px rgba(0,0,0,.12); }
+  body { background: var(--field); }
+  .page { box-shadow: var(--page-shadow); }
   .names { font-size: 68px; }
+}
+
+/* ===== Dark mode =====
+   Token swap only. No layout, no component rule is repeated here. Guests open
+   this from WhatsApp at night; the light page flashed at full brightness. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ivory: #17100f;
+    --ivory-2: #1e1614;
+    --hero-top: #221917;
+    --surface: #241a17;
+    --rule: #3d2c26;
+    --field: #0f0a09;
+
+    /* The maroon fill still works on a warm near-black, so the footer and the
+       button hover keep the brand colour. Brand *text* has to lighten to stay
+       readable, which is why the two are separate tokens. */
+    --maroon: #7a1f2b;
+    --maroon-ink: #eab3a4;
+    --on-maroon: #f7e9d0;
+    --gold: #c9a253;
+    --gold-ink: #d9ae57;
+
+    --text: #e8dcd2;
+    --muted: #b9a48f;
+    --note-ink: #ddc3b4;
+
+    --chrome-bg: rgba(23, 16, 15, .92);
+    --card-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+    --page-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+  }
 }
