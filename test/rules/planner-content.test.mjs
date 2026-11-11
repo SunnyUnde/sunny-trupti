@@ -295,9 +295,18 @@ test('only the author edits comment text, and only the text', async () => {
   await assertFails(updateDoc(comment(aai, 't_b'), { text: 'hijack' }));
 });
 
-test('only the author deletes a comment', async () => {
-  await assertFails(deleteDoc(comment(aai, 't_b')));
-  await assertSucceeds(deleteDoc(comment(trupti, 't_b')));
+test('any planner who can see the task deletes a comment; others cannot', async () => {
+  await assertFails(deleteDoc(comment(kaka, 't_all')));
+  await assertFails(deleteDoc(comment(sunny, 't_b')));
+  await assertFails(deleteDoc(comment(guest, 't_b')));
+  await assertFails(deleteDoc(comment(anon, 't_b')));
+  await assertSucceeds(deleteDoc(comment(aai, 't_b')));
+});
+
+test('no subcollection writes under a task that does not exist', async () => {
+  await assertFails(setDoc(notes(trupti, 'does_not_exist'), { text: 'x' }));
+  await assertFails(setDoc(comment(trupti, 'does_not_exist', 'c9'), { text: 'x', by: 'trupti', at: serverTimestamp() }));
+  await assertFails(setDoc(hist(trupti, 'does_not_exist', 'h9'), { from: 'todo', to: 'done', by: 'trupti', at: serverTimestamp() }));
 });
 
 // ===== history =====
