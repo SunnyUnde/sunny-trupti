@@ -135,7 +135,7 @@ export function openTaskDetail(ctx, id) {
         if (st === t.status) return;
         const from = t.status;
         data.setStatus(id, from, st).then(() => {
-          toast(...statusMessage(st), { undo: () => data.setStatus(id, st, from) });
+          toast(...statusMessage(st), { undo: () => data.setStatus(id, st, from).catch(() => toast(WRONG[0], WRONG[1])) });
         }, showWrong);
       };
       return b;

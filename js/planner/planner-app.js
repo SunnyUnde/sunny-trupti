@@ -7,7 +7,7 @@ import { WEDDING_DATE } from './planner-config.js';
 import { mountFamily, el } from './view-family.js';
 import { mountFull } from './view-planner-full.js';
 import { mountSimple } from './view-planner-simple.js';
-import { toast } from './planner-ui.js';
+import { toast, closeAllDialogs } from './planner-ui.js';
 
 const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
 const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];
@@ -22,7 +22,7 @@ function countdown() {
 }
 
 let unmount = null;
-const stop = () => { if (unmount) { unmount(); unmount = null; } };
+const stop = () => { closeAllDialogs(); if (unmount) { unmount(); unmount = null; } };
 
 // The one place that decides which view to mount. Readers see Family; everyone else
 // follows prefs.mode, and a mode change (setMode) arrives here as a prefs snapshot.
@@ -46,12 +46,13 @@ function showView(member, user) {
   const mountMode = (mode) => {
     if (mode === mounted) return;
     mounted = mode;
+    closeAllDialogs();
     if (unmountView) unmountView();
     unmountView = mode === 'full' ? mountFull(appEl, ctx, startTab) : mountSimple(appEl, ctx);
     startTab = undefined;
     retranslate();
   };
-  const stopPrefs = data.watchPrefs((prefs) => mountMode(viewMode(prefs)), () => { appEl.replaceChildren(el('p', WRONG[0], WRONG[1], 'fv-empty')); retranslate(); });
+  const stopPrefs = data.watchPrefs((prefs) => mountMode(viewMode(prefs)), () => { stop(); appEl.replaceChildren(el('p', WRONG[0], WRONG[1], 'fv-empty')); retranslate(); });
   unmount = () => { stopPrefs(); if (unmountView) unmountView(); };
 }
 
@@ -59,8 +60,11 @@ const appEl = document.getElementById('app');
 countdown();
 retranslate();
 document.getElementById('help-link').href = helpUrl();
+const signOutEl = document.getElementById('signout-link');
 const gateEl = document.getElementById('gate');
 let shownRole = null;
+
+signOutEl.onclick = () => authFns.signOut(auth);
 
 await mountGate(gateEl, {
   auth,
@@ -69,9 +73,10 @@ await mountGate(gateEl, {
   onState: (state, { user, member }) => {
     if (state !== 'member') {
       stop();
-      appEl.hidden = true; shownRole = null; return;
+      appEl.hidden = true; signOutEl.hidden = true; shownRole = null; return;
     }
     appEl.hidden = false;
+    signOutEl.hidden = false;
     if (shownRole !== member.role) {
       shownRole = member.role;
       showView(member, user);

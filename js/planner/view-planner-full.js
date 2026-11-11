@@ -152,7 +152,7 @@ export function mountFull(root, ctx, startTab = 'home') {
     const to = { todo: 'progress', progress: 'done' }[t.status];
     data.setStatus(t.id, t.status, to).then(() => {
       const [en, mr] = statusMessage(to);
-      toast(en, mr, { undo: () => data.setStatus(t.id, to, t.status) });
+      toast(en, mr, { undo: () => data.setStatus(t.id, to, t.status).catch(() => toast(WRONG[0], WRONG[1])) });
     }, () => toast(WRONG[0], WRONG[1]));
   }
 

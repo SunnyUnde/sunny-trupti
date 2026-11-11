@@ -47,3 +47,12 @@ test('gateBody: signed out waits for auth, in-app browser never does', () => {
   assert.equal(gateBody({ state: 'signed_out', authKnown: true }), 'signed_out');
   assert.equal(gateBody({ state: 'in_app_browser', authKnown: false }), 'in_app_browser');
 });
+
+const { requestPayload } = await import('../js/planner/planner-gate.js');
+
+test('request payload sends the display name as is, empty when absent', () => {
+  assert.deepEqual(requestPayload({ email: 'a@b.c', displayName: 'Aai', photoURL: 'https://x/y.png' }),
+    { email: 'a@b.c', name: 'Aai', photoURL: 'https://x/y.png' });
+  assert.equal(requestPayload({ email: 'a@b.c', displayName: null, photoURL: null }).name, '');
+  assert.equal(requestPayload({ email: 'a@b.c', photoURL: 'javascript:1' }).photoURL, null);
+});

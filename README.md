@@ -83,6 +83,20 @@ enforcement. Day-to-day use needs no setup; these steps are one-time.
    a reCAPTCHA v3 key (start in monitoring mode). Put the web config into
    `js/firebase-init.js` and the site key into its App Check call, and set
    `HELP_WHATSAPP` in `js/planner/planner-config.js`.
+
+   Sign-in runs on `sunnyandtrupti.com` (`authDomain`), so self-host the Firebase
+   auth helpers: copy `handler`, `handler.js`, `experiments.js`, `iframe` and
+   `iframe.js` from `https://<project-id>.firebaseapp.com/__/auth/` into `__/auth/`
+   in this repo. After the push, verify `https://sunnyandtrupti.com/__/auth/handler`
+   renders. GitHub Pages may serve the extensionless `handler` and `iframe` as
+   downloads; if so, also save copies as `handler.html` and `iframe.html` (Pages
+   resolves `/handler` to `handler.html`). Add
+   `https://sunnyandtrupti.com/__/auth/handler` to the Google OAuth client's
+   authorised redirect URIs.
+
+   Deleting a label queries `in` plus `array-contains`, which may need a composite
+   index. If so, Firestore returns a create-index link on the first label delete;
+   open it and create the index.
 2. **Rules:** run `npm test` and `npm run test:rules` (needs Java 21), then
    `npx firebase deploy --only firestore:rules --project <project-id>`.
 3. **Starter labels:**

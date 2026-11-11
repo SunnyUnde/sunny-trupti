@@ -41,6 +41,21 @@ export function toast(msgEn, msgMr, { undo } = {}) {
   return dismiss;
 }
 
+// Every open dialog is tracked so a view unmount can close them all. Closing fires the
+// dialog's own 'close' event, which is where each dialog stops its watchers.
+export function dialogRegistry() {
+  const open = new Set();
+  return {
+    add(dlg) {
+      open.add(dlg);
+      dlg.addEventListener('close', () => open.delete(dlg));
+    },
+    closeAll() { for (const dlg of [...open]) dlg.close(); },
+  };
+}
+const dialogs = dialogRegistry();
+export const closeAllDialogs = dialogs.closeAll;
+
 // A modal sheet with a title and a Close button. Fill `body`; `dlg` fires 'close'.
 export function openDialog(titleEn, titleMr) {
   const dlg = document.createElement('dialog');
@@ -66,6 +81,7 @@ export function openDialog(titleEn, titleMr) {
   slot.setAttribute('aria-live', 'polite');
   dlg.append(head, body, slot);
   dlg.addEventListener('close', () => dlg.remove());
+  dialogs.add(dlg);
   document.body.append(dlg);
   dlg.showModal();
   retranslate();

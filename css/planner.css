@@ -16,6 +16,11 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
   color: var(--on-maroon); font-size: 18px; text-decoration: underline;
 }
 
+.pl-signout {
+  flex-basis: 100%; display: flex; align-items: center; min-height: 48px; background: none; border: 0;
+  padding: 0; font: inherit; color: var(--on-maroon); font-size: 18px; text-decoration: underline; cursor: pointer;
+}
+
 .pl-main { max-width: var(--max); margin: 0 auto; padding: 24px 16px 96px; }
 .pl-main section { padding: 0; text-align: left; }
 .gate {

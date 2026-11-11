@@ -36,6 +36,9 @@ const COPY = {
 
 const httpUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : null);
 
+// The rules require name == the token's name claim, which is '' for accounts with no display name.
+export const requestPayload = (u) => ({ email: u.email, name: u.displayName ?? '', photoURL: httpUrl(u.photoURL) });
+
 function el(tag, copyKey, attrs = {}) {
   const n = document.createElement(tag);
   if (copyKey) {
@@ -114,7 +117,7 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
       s.error = false;
       try {
         const u = s.user;
-        await data(u.uid).requestAccess({ email: u.email, name: u.displayName || u.email, photoURL: httpUrl(u.photoURL) });
+        await data(u.uid).requestAccess(requestPayload(u));
         s.sent = true;
         s.error = false;
         render();

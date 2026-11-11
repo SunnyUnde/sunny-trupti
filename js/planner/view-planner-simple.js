@@ -105,7 +105,7 @@ export function mountSimple(root, ctx) {
       if (s.comments.has(id)) continue;
       const c = { n: 0, stop: null };
       s.comments.set(id, c);
-      c.stop = data.watchComments(id, (list) => { c.n = list.length; render(); });
+      c.stop = data.watchComments(id, (list) => { c.n = list.length; render(); }, () => { c.n = 0; render(); fail(); });
     }
   }
 
@@ -215,7 +215,7 @@ export function mountSimple(root, ctx) {
   stops.push(data.watchEvents(member, {}, ...watcher('events', (e) => { s.events = e; })));
   stops.push(data.watchLabels(...watcher('labels', (l) => { s.labels = l; })));
   // Only owners may read requests.
-  if (member.role === 'owner') stops.push(data.watchRequests((r) => { s.requests = r.length; render(); }));
+  if (member.role === 'owner') stops.push(data.watchRequests((r) => { s.requests = r.length; render(); }, () => { s.requests = 0; render(); fail(); }));
 
   root.replaceChildren(hi, toggle.node, plannerBox, familyBox);
   setMode('planner');
