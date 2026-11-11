@@ -107,8 +107,108 @@ service cloud.firestore {
         && request.resource.data.mode in ['simple', 'full'];
     }
 
-    // Denied until the planner rules land.
-    match /tasks/{id} { allow read, write: if false; }
+    // Visibilities the caller may see and write. Owners are planners too.
+    function visibleFor() {
+      return member().role == 'reader' ? ['everyone'] : ['everyone', 'planners', sideOf()];
+    }
+    function canSee(d) {
+      return isMember() && d.visibility in visibleFor();
+    }
+    function canPlan(d) {
+      return isEditor()
+        && d.visibility in ['everyone', 'planners', 'groom', 'bride']
+        && d.visibility in visibleFor();
+    }
+    function statuses() {
+      return ['todo', 'progress', 'done'];
+    }
+
+    // tasks/{taskId}: read by visibility; writes by planners, within their set
+    // before and after the change.
+    match /tasks/{taskId} {
+      function validTask(d) {
+        return d.status in statuses()
+          && d.due is string
+          && d.labels is list;
+      }
+      function canPlanParent() {
+        return canPlan(get(/databases/$(database)/documents/tasks/$(taskId)).data);
+      }
+
+      allow read: if canSee(resource.data);
+      allow create: if canPlan(request.resource.data)
+        && validTask(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if canPlan(resource.data)
+        && canPlan(request.resource.data)
+        && validTask(request.resource.data)
+        && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if canPlan(resource.data);
+
+      // Never readable by readers. Planners delete subcollection docs before
+      // the task itself, so deletes rely on the parent still existing.
+      match /private/notes {
+        allow read, delete: if canPlanParent();
+        allow create, update: if canPlanParent()
+          && request.resource.data.keys().hasOnly(['text'])
+          && request.resource.data.text is string;
+      }
+
+      match /comments/{commentId} {
+        allow read: if canPlanParent();
+        allow create: if canPlanParent()
+          && request.resource.data.keys().hasOnly(['text', 'by', 'at'])
+          && request.resource.data.text is string
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at is timestamp;
+        allow update: if canPlanParent()
+          && resource.data.by == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
+          && request.resource.data.text is string;
+        allow delete: if canPlanParent() && resource.data.by == request.auth.uid;
+      }
+
+      // Never rewritten; deletable only so a task delete can cascade.
+      match /history/{historyId} {
+        allow read, delete: if canPlanParent();
+        allow create: if canPlanParent()
+          && request.resource.data.keys().hasOnly(['from', 'to', 'by', 'at'])
+          && request.resource.data.from in statuses()
+          && request.resource.data.to in statuses()
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at is timestamp;
+      }
+    }
+
+    match /events/{eventId} {
+      allow read: if canSee(resource.data);
+      allow create: if canPlan(request.resource.data);
+      allow update: if canPlan(resource.data) && canPlan(request.resource.data);
+      allow delete: if canPlan(resource.data);
+    }
+
+    // A label linked to an event must not reveal a hidden one to readers.
+    match /labels/{labelId} {
+      function validLabel(d) {
+        return d.group in ['day', 'category']
+          && (d.get('eventId', null) == null
+            || get(/databases/$(database)/documents/events/$(d.eventId)).data.visibility == 'everyone');
+      }
+
+      allow read: if isMember();
+      allow create, update: if isEditor() && validLabel(request.resource.data);
+      allow delete: if isEditor();
+    }
+
+    match /vendors/{vendorId} {
+      allow read, delete: if isEditor();
+      allow create, update: if isEditor()
+        && request.resource.data.status in ['to_find', 'shortlisted', 'booked', 'paid'];
+    }
+
+    match /settings/budget {
+      allow read, write: if isEditor();
+    }
 
     // ===== REGISTRY =====
     match /registry/{rest=**} { allow read, write: if false; }
