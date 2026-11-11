@@ -81,6 +81,14 @@ export function usedLabels(tasks, labels) {
   return labels.filter((l) => used.has(l.id));
 }
 
+// Each tab depends on some watchers; it shows the error if any of them failed.
+const TAB_NEEDS = { schedule: ['events'], progress: ['tasks', 'labels'], venue: [] };
+export const tabFailed = (tab, failed) => TAB_NEEDS[tab].some((w) => failed[w]);
+
+// Selected chips that still exist among the shown labels.
+export const activeFilterCount = (selected, labels) =>
+  [...selected.day, ...selected.category].filter((id) => labels.some((l) => l.id === id)).length;
+
 export function taskRows(tasks, labels, selected, today) {
   const byId = new Map(labels.map((l) => [l.id, l]));
   return filterByLabels(tasks, byId, selected)
@@ -156,7 +164,8 @@ function renderProgress(tasks, allLabels, selected, open, onToggle, onOpen) {
   const wrap = el('div', undefined, undefined, 'fv-stack');
   const labels = usedLabels(tasks, allLabels);
   if (labels.length) {
-    const btn = el('button', 'Filter', 'निवडा', 'fv-filter-btn');
+    const n = activeFilterCount(selected, labels);
+    const btn = el('button', n ? `Filter (${n})` : 'Filter', n ? `निवडा (${mrDigits(n)})` : 'निवडा', 'fv-filter-btn');
     btn.type = 'button';
     btn.setAttribute('aria-expanded', String(open));
     btn.onclick = onOpen;
@@ -208,7 +217,7 @@ function renderVenue() {
 
 export function mountFamily(root, ctx) {
   const { member, data } = ctx;
-  const s = { tasks: null, events: null, labels: [], tab: 'schedule', selected: { day: [], category: [] }, filterOpen: false, failed: false };
+  const s = { tasks: null, events: null, labels: [], tab: 'schedule', selected: { day: [], category: [] }, filterOpen: false, failed: {} };
   const stops = [];
 
   const badge = el('p', 'View only', 'फक्त पाहण्यासाठी', 'fv-badge');
@@ -251,7 +260,7 @@ export function mountFamily(root, ctx) {
     track.setAttribute('aria-valuenow', String(p.pct));
     track.setAttribute('aria-label', barLabel.dataset.en);
     let body;
-    if (s.failed) body = dual('p', WRONG, 'fv-empty');
+    if (tabFailed(s.tab, s.failed)) body = dual('p', WRONG, 'fv-empty');
     else if (s.tab === 'venue') body = renderVenue();
     else if ((s.tab === 'schedule' ? s.events : s.tasks) === null) body = dual('p', LOADING, 'fv-empty');
     else if (s.tab === 'schedule') body = renderSchedule(s.events);
@@ -260,10 +269,13 @@ export function mountFamily(root, ctx) {
     retranslate();
   }
 
-  const fail = () => { s.failed = true; render(); };
-  stops.push(data.watchTasks(member, { family: true }, (t) => { s.tasks = t; s.failed = false; render(); }, fail));
-  stops.push(data.watchEvents(member, { family: true }, (e) => { s.events = e; s.failed = false; render(); }, fail));
-  stops.push(data.watchLabels((l) => { s.labels = l; s.failed = false; render(); }, fail));
+  const watcher = (name, set) => [
+    (v) => { set(v); s.failed[name] = false; render(); },
+    () => { s.failed[name] = true; render(); },
+  ];
+  stops.push(data.watchTasks(member, { family: true }, ...watcher('tasks', (t) => { s.tasks = t; })));
+  stops.push(data.watchEvents(member, { family: true }, ...watcher('events', (e) => { s.events = e; })));
+  stops.push(data.watchLabels(...watcher('labels', (l) => { s.labels = l; })));
 
   root.replaceChildren(badge, barWrap, tablist, panel);
   render();

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const { timeMinutes, usedLabels, formatDate, groupEventsByDate, isWaiting, taskRow, taskRows, filterByLabels, statusWords } =
+const { tabFailed, activeFilterCount, timeMinutes, usedLabels, formatDate, groupEventsByDate, isWaiting, taskRow, taskRows, filterByLabels, statusWords } =
   await import('../js/planner/view-family.js');
 
 const L = [
@@ -98,4 +98,19 @@ test('usedLabels keeps only labels a task carries', () => {
   const tasks = [T({ labels: ['d1', 'gone'] }), T({ labels: ['c2'] })];
   assert.deepEqual(usedLabels(tasks, L).map((l) => l.id), ['d1', 'c2']);
   assert.deepEqual(usedLabels([], L), []);
+});
+
+test('tabFailed: each tab only reacts to its own watchers', () => {
+  assert.equal(tabFailed('progress', { tasks: true }), true);
+  assert.equal(tabFailed('progress', { labels: true }), true);
+  assert.equal(tabFailed('progress', { events: true }), false);
+  assert.equal(tabFailed('schedule', { events: true }), true);
+  assert.equal(tabFailed('schedule', { tasks: true, labels: true }), false);
+  assert.equal(tabFailed('venue', { tasks: true, events: true, labels: true }), false);
+  assert.equal(tabFailed('progress', { tasks: false }), false);
+});
+
+test('activeFilterCount counts only chips that exist', () => {
+  assert.equal(activeFilterCount({ day: ['d1'], category: ['c1', 'gone'] }, L), 2);
+  assert.equal(activeFilterCount({ day: [], category: [] }, L), 0);
 });
