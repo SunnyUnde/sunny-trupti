@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const { formatDate, groupEventsByDate, isWaiting, taskRow, taskRows, filterByLabels, statusWords } =
+const { timeMinutes, usedLabels, formatDate, groupEventsByDate, isWaiting, taskRow, taskRows, filterByLabels, statusWords } =
   await import('../js/planner/view-family.js');
 
 const L = [
@@ -74,4 +74,28 @@ test('taskRows sorts by due then title and filters', () => {
 test('statusWords', () => {
   assert.deepEqual(statusWords('progress'), ['In progress', 'सुरू आहे']);
   assert.deepEqual(statusWords('weird'), ['To do', 'करायचे आहे']);
+});
+
+test('timeMinutes parses 12 hour and 24 hour, rest is last', () => {
+  assert.equal(timeMinutes('9:00 AM'), 540);
+  assert.equal(timeMinutes('12:00 PM'), 720);
+  assert.equal(timeMinutes('12:30 AM'), 30);
+  assert.equal(timeMinutes('1:00 PM'), 780);
+  assert.equal(timeMinutes('14:30'), 870);
+  assert.equal(timeMinutes('to confirm'), Infinity);
+  assert.equal(timeMinutes(''), Infinity);
+});
+
+test('events sort by clock time, not text', () => {
+  const ev = (id, time) => ({ id, date: '2027-01-24', title: id, time });
+  const ids = (list) => groupEventsByDate(list)[0].events.map((e) => e.id);
+  assert.deepEqual(ids([ev('b', '10:00 AM'), ev('a', '9:00 AM')]), ['a', 'b']);
+  assert.deepEqual(ids([ev('b', '1:00 PM'), ev('a', '12:00 PM')]), ['a', 'b']);
+  assert.deepEqual(ids([ev('c', ''), ev('b', 'to confirm'), ev('a', '8:00 AM')]), ['a', 'b', 'c']);
+});
+
+test('usedLabels keeps only labels a task carries', () => {
+  const tasks = [T({ labels: ['d1', 'gone'] }), T({ labels: ['c2'] })];
+  assert.deepEqual(usedLabels(tasks, L).map((l) => l.id), ['d1', 'c2']);
+  assert.deepEqual(usedLabels([], L), []);
 });

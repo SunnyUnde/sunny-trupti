@@ -22,6 +22,14 @@ export function formatDate(date, lang, { weekday = true } = {}) {
   }).format(new Date(Date.UTC(y, m - 1, d)));
 }
 
+// '9:00 AM' or '14:30' to minutes; anything else ('to confirm', '') sorts last.
+export function timeMinutes(time) {
+  const m = /^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i.exec((time || '').trim());
+  if (!m) return Infinity;
+  const h = Number(m[1]) % 12 + (/pm/i.test(m[3] || '') ? 12 : 0);
+  return (m[3] ? h : Number(m[1])) * 60 + Number(m[2] || 0);
+}
+
 // Dates ascending; inside a day, timed events first, then by title.
 export function groupEventsByDate(events) {
   const byDate = new Map();
@@ -38,7 +46,7 @@ export function groupEventsByDate(events) {
   return [...byDate.keys()].sort().map((date) => ({
     date,
     events: byDate.get(date).sort(
-      (a, b) => (!a.time - !b.time) || a.time.localeCompare(b.time) || a.title.localeCompare(b.title),
+      (a, b) => (timeMinutes(a.time) - timeMinutes(b.time) || 0) || a.title.localeCompare(b.title),
     ),
   }));
 }
@@ -65,6 +73,12 @@ export function filterByLabels(tasks, labelsById, selected) {
     const ids = (selected[group] || []).filter((id) => labelsById.get(id)?.group === group);
     return applyFilters(list, { labelIds: ids });
   }, tasks);
+}
+
+// Only labels some visible task carries, so the chips never show dead ends.
+export function usedLabels(tasks, labels) {
+  const used = new Set(tasks.flatMap((t) => t.labels || []));
+  return labels.filter((l) => used.has(l.id));
 }
 
 export function taskRows(tasks, labels, selected, today) {
@@ -95,10 +109,7 @@ const TABS = [
   ['venue', 'Venue', 'ठिकाण'],
 ];
 
-function dateHeading(date) {
-  const h = el('h3', formatDate(date, 'en'), formatDate(date, 'mr'), 'fv-date');
-  return h;
-}
+const dateHeading = (date) => el('h3', formatDate(date, 'en'), formatDate(date, 'mr'), 'fv-date');
 
 function renderSchedule(events) {
   const wrap = el('div', undefined, undefined, 'fv-stack');
@@ -141,13 +152,23 @@ function chipRow(labels, group, selected, onToggle) {
   return row;
 }
 
-function renderProgress(tasks, labels, selected, onToggle) {
+function renderProgress(tasks, allLabels, selected, open, onToggle, onOpen) {
   const wrap = el('div', undefined, undefined, 'fv-stack');
-  const filters = el('div', undefined, undefined, 'fv-filters');
-  for (const g of ['day', 'category']) {
-    if (labels.some((l) => l.group === g)) filters.append(chipRow(labels, g, selected[g], onToggle));
+  const labels = usedLabels(tasks, allLabels);
+  if (labels.length) {
+    const btn = el('button', 'Filter', 'निवडा', 'fv-filter-btn');
+    btn.type = 'button';
+    btn.setAttribute('aria-expanded', String(open));
+    btn.onclick = onOpen;
+    wrap.append(btn);
+    if (open) {
+      const filters = el('div', undefined, undefined, 'fv-filters');
+      for (const g of ['day', 'category']) {
+        if (labels.some((l) => l.group === g)) filters.append(chipRow(labels, g, selected[g], onToggle));
+      }
+      wrap.append(filters);
+    }
   }
-  wrap.append(filters);
   const rows = taskRows(tasks, labels, selected, todayIST(new Date()));
   if (!rows.length) { wrap.append(dual('p', NOTHING, 'fv-empty')); return wrap; }
   for (const r of rows) {
@@ -187,7 +208,7 @@ function renderVenue() {
 
 export function mountFamily(root, ctx) {
   const { member, data } = ctx;
-  const s = { tasks: null, events: null, labels: [], tab: 'schedule', selected: { day: [], category: [] }, failed: false };
+  const s = { tasks: null, events: null, labels: [], tab: 'schedule', selected: { day: [], category: [] }, filterOpen: false, failed: false };
   const stops = [];
 
   const badge = el('p', 'View only', 'फक्त पाहण्यासाठी', 'fv-badge');
@@ -222,6 +243,7 @@ export function mountFamily(root, ctx) {
 
   function render() {
     for (const [id, b] of buttons) b.setAttribute('aria-selected', String(id === s.tab));
+    barWrap.hidden = !s.tasks;
     const p = s.tasks ? progress(s.tasks) : { pct: 0 };
     barLabel.dataset.en = `Preparations ${p.pct}% done`;
     barLabel.dataset.mr = `तयारी ${mrDigits(p.pct)}% पूर्ण`;
@@ -233,15 +255,15 @@ export function mountFamily(root, ctx) {
     else if (s.tab === 'venue') body = renderVenue();
     else if ((s.tab === 'schedule' ? s.events : s.tasks) === null) body = dual('p', LOADING, 'fv-empty');
     else if (s.tab === 'schedule') body = renderSchedule(s.events);
-    else body = renderProgress(s.tasks, s.labels, s.selected, toggle);
+    else body = renderProgress(s.tasks, s.labels, s.selected, s.filterOpen, toggle, () => { s.filterOpen = !s.filterOpen; render(); });
     panel.replaceChildren(body);
     retranslate();
   }
 
   const fail = () => { s.failed = true; render(); };
-  stops.push(data.watchTasks(member, { family: true }, (t) => { s.tasks = t; render(); }, fail));
-  stops.push(data.watchEvents(member, { family: true }, (e) => { s.events = e; render(); }, fail));
-  stops.push(data.watchLabels((l) => { s.labels = l; render(); }, fail));
+  stops.push(data.watchTasks(member, { family: true }, (t) => { s.tasks = t; s.failed = false; render(); }, fail));
+  stops.push(data.watchEvents(member, { family: true }, (e) => { s.events = e; s.failed = false; render(); }, fail));
+  stops.push(data.watchLabels((l) => { s.labels = l; s.failed = false; render(); }, fail));
 
   root.replaceChildren(badge, barWrap, tablist, panel);
   render();

@@ -1,6 +1,6 @@
 // Seeds the 'demo-wedding' emulators (Firestore :8080, Auth :9099) for manual
 // walks. Re-runnable: it clears both first. Run: node test/rules/seed-dev.mjs
-// Sign in with the Google popup in the emulator, using the emails below.
+// Headless sign-in: email and password 'password' of the users below (uid sunny, trupti, aai, kaka).
 
 const PROJECT = 'demo-wedding';
 const FS = 'http://127.0.0.1:8080';
