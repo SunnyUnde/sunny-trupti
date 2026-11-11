@@ -181,3 +181,5 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .sp-actions .btn-quiet { flex: 1; }
 .sp-banner:focus-visible, .sp-actions button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .sp-banner[hidden] { display: none; }
+.sp-modelink { display: inline-flex; align-items: center; min-height: 48px; margin-top: 12px; padding: 0; font: inherit; font-size: 18px; color: var(--maroon-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.sp-modelink:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }

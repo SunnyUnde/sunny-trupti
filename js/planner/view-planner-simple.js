@@ -7,7 +7,7 @@ import {
 import { openTaskEditor } from './task-editor.js';
 import { openTaskDetail } from './task-detail.js';
 import { attachSwipe } from './swipe.js';
-import { viewToggle, modeSwitch } from './planner-ui.js';
+import { viewToggle, modeLink } from './planner-ui.js';
 
 // ===== PURE HELPERS =====
 export function greeting(hour, name) {
@@ -66,7 +66,7 @@ export function mountSimple(root, ctx) {
   const panel = el('div', undefined, undefined, 'fv-panel');
   panel.setAttribute('role', 'tabpanel');
   const plannerBox = el('div');
-  plannerBox.append(badge, banner, tablist, panel);
+  plannerBox.append(badge, banner, tablist, panel, modeLink('simple', ctx.switchMode));
   const familyBox = el('div');
 
   function setMode(mode) {
@@ -105,7 +105,7 @@ export function mountSimple(root, ctx) {
       if (s.comments.has(id)) continue;
       const c = { n: 0, stop: null };
       s.comments.set(id, c);
-      c.stop = data.watchComments(id, (list) => { c.n = list.length; render(); }, () => {}); // a denied count just stays off the card
+      c.stop = data.watchComments(id, (list) => { c.n = list.length; render(); });
     }
   }
 
@@ -214,10 +214,10 @@ export function mountSimple(root, ctx) {
   stops.push(data.watchTasks(member, {}, ...watcher('tasks', (t) => { s.tasks = t; })));
   stops.push(data.watchEvents(member, {}, ...watcher('events', (e) => { s.events = e; })));
   stops.push(data.watchLabels(...watcher('labels', (l) => { s.labels = l; })));
-  // Only owners may read requests. A denial just leaves the banner off.
-  if (member.role === 'owner') stops.push(data.watchRequests((r) => { s.requests = r.length; render(); }, () => {}));
+  // Only owners may read requests.
+  if (member.role === 'owner') stops.push(data.watchRequests((r) => { s.requests = r.length; render(); }));
 
-  root.replaceChildren(hi, modeSwitch('simple', ctx.switchMode), toggle.node, plannerBox, familyBox);
+  root.replaceChildren(hi, toggle.node, plannerBox, familyBox);
   setMode('planner');
 
   return () => {

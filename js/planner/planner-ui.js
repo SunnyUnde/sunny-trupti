@@ -90,9 +90,13 @@ const pressedGroup = (choices, onPick) => {
 export const viewToggle = (onPick) =>
   pressedGroup([['planner', 'Planner', 'नियोजक'], ['family', 'Family', 'कुटुंब']], onPick);
 
-// Simple | Full, shared by both planner views. The caller persists and re-mounts.
-export function modeSwitch(current, onPick) {
-  const g = pressedGroup([['simple', 'Simple', 'सोपे'], ['full', 'Full', 'पूर्ण']], onPick);
-  g.set(current);
-  return g.node;
+// One quiet link to the other mode, shared by both planner views. The caller persists and re-mounts.
+export function modeLink(current, onPick) {
+  const full = current === 'simple';
+  const b = full
+    ? el('button', 'Switch to Full', 'पूर्ण पहा', 'sp-modelink')
+    : el('button', 'Switch to Simple', 'सोपे पहा', 'sp-modelink');
+  b.type = 'button';
+  b.onclick = () => onPick(full ? 'full' : 'simple');
+  return b;
 }

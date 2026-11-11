@@ -4,7 +4,7 @@ import { createPlannerData } from './planner-data.js';
 import { mountGate, helpUrl } from './planner-gate.js';
 import { todayIST, daysTo, viewMode } from './planner-core.js';
 import { WEDDING_DATE } from './planner-config.js';
-import { mountFamily } from './view-family.js';
+import { mountFamily, el } from './view-family.js';
 import { mountFull } from './view-planner-full.js';
 import { mountSimple } from './view-planner-simple.js';
 import { toast } from './planner-ui.js';
@@ -45,7 +45,7 @@ function showView(member, user) {
     unmountView = (mode === 'full' ? mountFull : mountSimple)(appEl, ctx);
     retranslate();
   };
-  const stopPrefs = data.watchPrefs((prefs) => mountMode(viewMode(prefs)), () => mountMode('simple'));
+  const stopPrefs = data.watchPrefs((prefs) => mountMode(viewMode(prefs)), () => { appEl.replaceChildren(el('p', WRONG[0], WRONG[1], 'fv-empty')); retranslate(); });
   unmount = () => { stopPrefs(); if (unmountView) unmountView(); };
 }
 

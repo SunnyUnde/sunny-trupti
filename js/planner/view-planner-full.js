@@ -8,7 +8,7 @@ import {
 } from './view-family.js';
 import { openTaskEditor, visibilityChoices, visibilityLabel } from './task-editor.js';
 import { openTaskDetail, statusMessage } from './task-detail.js';
-import { viewToggle, modeSwitch } from './planner-ui.js';
+import { viewToggle, modeLink } from './planner-ui.js';
 
 // ===== PURE HELPERS =====
 export const WINDOWS = {
@@ -118,7 +118,7 @@ export function mountFull(root, ctx) {
   const plannerBox = el('div');
   const panel = el('div', undefined, undefined, 'fv-panel');
   panel.setAttribute('role', 'tabpanel');
-  plannerBox.append(tablist, panel);
+  plannerBox.append(tablist, panel, modeLink('full', ctx.switchMode));
   const familyBox = el('div');
 
   function setMode(mode) {
@@ -275,7 +275,7 @@ export function mountFull(root, ctx) {
   stops.push(data.watchVendors(...watcher('vendors', (v) => { s.vendors = v; })));
   stops.push(data.watchBudget(...watcher('budget', (b) => { s.budget = b; })));
 
-  root.replaceChildren(modeSwitch('full', ctx.switchMode), toggle.node, plannerBox, familyBox);
+  root.replaceChildren(toggle.node, plannerBox, familyBox);
   setMode('planner');
 
   return () => {
