@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const core = await import('../js/planner-core.js');
+const core = await import('../js/planner/planner-core.js');
 const {
   todayIST, visibleSet, familySet, canSee, nextStatus, thisWeek, deadlineWindow,
   applyFilters, progress, formatRupees, isInAppBrowser, daysTo,
