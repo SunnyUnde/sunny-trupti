@@ -169,11 +169,11 @@ export function mountFull(root, ctx) {
     if (t.status === 'done') {
       card.append(el('p', sen, smr, 'fv-status fv-status-done'));
     } else {
-      const next = statusWords({ todo: 'progress', progress: 'done' }[t.status]);
       const pill = el('button', undefined, undefined, `pf-pill pf-pill-${t.status}`);
       pill.type = 'button';
       pill.append(el('span', sen, smr));
-      pill.append(el('span', `. Tap to move to ${next[0]}`, `. ${next[1]} मध्ये हलवण्यासाठी दाबा`, 'sr-only'));
+      const nx = statusWords({ todo: 'progress', progress: 'done' }[t.status]);
+      pill.append(el('span', `, tap for ${nx[0]}`, `, पुढे: ${nx[1]}`));
       pill.onclick = () => advance(t);
       card.append(pill);
     }

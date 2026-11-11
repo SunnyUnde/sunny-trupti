@@ -40,9 +40,10 @@ export function ownerChoices(member, members, current) {
   return choices;
 }
 
+// An edit draft has no status: changing it goes through setStatus, which writes history.
 export const draftFromTask = (task, member) => task
   ? {
-    title: task.title, due: task.due || '', owner: task.owner, status: task.status,
+    title: task.title, due: task.due || '', owner: task.owner,
     labels: [...(task.labels || [])], visibility: task.visibility, notes: '',
   }
   : { title: '', due: '', owner: member.uid, status: 'todo', labels: [], visibility: 'everyone', notes: '' };
@@ -57,10 +58,24 @@ export function buildTask(d, choices, labels) {
     due: d.due,
     owner: d.owner,
     ownerName: choices.find((c) => c.value === d.owner).name,
-    status: d.status,
+    ...('status' in d && { status: d.status }),
     labels: d.labels.filter((id) => known.has(id)),
     visibility: d.visibility,
   };
+}
+
+// Creates the task once (state.id remembers it), then updates and saves notes.
+// A retry after a partial failure never creates a second task, and an update
+// never carries status (a new task's initial status is set only on creation).
+export async function persistTask(data, task, fields, notes, state) {
+  const id = state.id ?? task?.id;
+  if (id) {
+    const { status, ...rest } = fields;
+    await data.updateTask(id, rest);
+  } else {
+    state.id = await data.addTask(fields);
+  }
+  if (notes.trim() || task) await data.saveNotes(state.id ?? id, notes);
 }
 
 // ===== DOM =====
@@ -91,6 +106,8 @@ export function openTaskEditor(ctx, task) {
   const { member, data, toast } = ctx;
   const draft = draftFromTask(task, member);
   const s = { labels: [], members: [] };
+  const ready = { labels: false, notes: !task };
+  const saved = {};
   const stops = [];
   const { dlg, body } = task
     ? openDialog('Edit task', 'काम बदला')
@@ -157,14 +174,16 @@ export function openTaskEditor(ctx, task) {
   );
   const save = el('button', 'Add label', 'लेबल जोडा', 'btn-main');
   save.type = 'button';
-  save.onclick = async () => {
+  save.onclick = () => {
     const name = nameIn.value.trim();
     if (!name) return;
     const group = groupSel.value;
-    draft.labels.push(await data.addLabel({ name, group, color: group === 'day' ? 'gold' : 'maroon' }));
-    nameIn.value = '';
-    newLabel.hidden = true;
-    renderLabels();
+    data.addLabel({ name, group, color: group === 'day' ? 'gold' : 'maroon' }).then((id) => {
+      draft.labels.push(id);
+      nameIn.value = '';
+      newLabel.hidden = true;
+      renderLabels();
+    }, showWrong);
   };
   newLabel.hidden = true;
   newLabel.append(
@@ -184,11 +203,11 @@ export function openTaskEditor(ctx, task) {
 
   form.append(
     field('Title', 'शीर्षक', title), field('Due date', 'मुदत', due), ownerWrap,
-    field('Status', 'स्थिती', status),
+    ...(task ? [] : [field('Status', 'स्थिती', status)]),
     el('p', 'Labels', 'लेबल', 'pf-sub'), labelsBox, newLabel,
     field('Notes (planners only)', 'नोंदी (फक्त नियोजक)', notes),
     field('Who can see this', 'हे कोण पाहू शकेल', vis),
-    err, actions,
+    actions,
   );
   function showWrong() {
     err.dataset.en = WRONG[0];
@@ -206,31 +225,31 @@ export function openTaskEditor(ctx, task) {
     }
     submit.disabled = true;
     const fields = buildTask(draft, choices(), s.labels);
-    const persist = async () => {
-      const id = task ? task.id : await data.addTask(fields);
-      if (task) await data.updateTask(id, fields);
-      if (draft.notes.trim() || task) await data.saveNotes(id, draft.notes);
-    };
-    await persist().then(() => {
+    await persistTask(data, task, fields, draft.notes, saved).then(() => {
       dlg.close();
       toast(task ? 'Task saved.' : 'Task added.', task ? 'काम जतन केले.' : 'काम जोडले.');
     }, () => { submit.disabled = false; showWrong(); });
   };
 
-  body.append(form);
-  stops.push(data.watchLabels((l) => { s.labels = l; renderLabels(); }, showWrong));
+  // The form shows only once labels (and notes, when editing) have loaded, so a
+  // save can never overwrite them with blanks.
+  const loading = dual('p', ['Loading', 'लोड होत आहे'], 'pf-note');
+  body.append(err, loading);
+  const show = () => { if (ready.labels && ready.notes) { loading.replaceWith(form); title.focus(); } };
+  stops.push(data.watchLabels((l) => { s.labels = l; ready.labels = true; renderLabels(); show(); }, showWrong));
   if (member.role === 'owner') stops.push(data.watchMembers((m) => { s.members = m.map((x) => ({ ...x, uid: x.id })); renderOwner(); }, showWrong));
   if (task) {
     // Notes live in their own document; prefill once, then stop listening.
     const stopNotes = data.watchNotes(task.id, (n) => {
       notes.value = n ? n.text : '';
       draft.notes = notes.value;
+      ready.notes = true;
       stopNotes();
+      show();
     }, showWrong);
     stops.push(stopNotes);
   }
   renderOwner();
   renderLabels();
   retranslate();
-  title.focus();
 }

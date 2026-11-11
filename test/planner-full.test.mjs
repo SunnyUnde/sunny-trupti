@@ -153,3 +153,43 @@ test('formatStamp is IST, per language; null means just now', () => {
   assert.equal(detail.formatStamp(null, 'en'), 'just now');
   assert.equal(detail.formatStamp(null, 'mr'), 'आत्ताच');
 });
+
+test('an edit draft carries no status, so buildTask omits it', () => {
+  const d = editor.draftFromTask(T({ title: 'A', status: 'done' }), groomOwner);
+  assert.equal('status' in d, false);
+  const choices = editor.ownerChoices(groomOwner, [], null);
+  assert.equal('status' in editor.buildTask(d, choices, L), false);
+});
+
+const fakeData = (failNotes = 0) => {
+  const calls = [];
+  let left = failNotes;
+  return {
+    calls,
+    addTask: async (f) => { calls.push(['add', f]); return 'new1'; },
+    updateTask: async (id, p) => { calls.push(['update', id, p]); },
+    saveNotes: async (id, t) => { calls.push(['notes', id, t]); if (left-- > 0) throw new Error('x'); },
+  };
+};
+
+test('persistTask updates an existing task without status, then saves notes', async () => {
+  const d = fakeData();
+  await editor.persistTask(d, { id: 't1' }, { title: 'A', status: 'done' }, 'n', {});
+  assert.deepEqual(d.calls, [['update', 't1', { title: 'A' }], ['notes', 't1', 'n']]);
+});
+
+test('persistTask retry after a failed notes save never adds a second task', async () => {
+  const d = fakeData(1);
+  const state = {};
+  await assert.rejects(editor.persistTask(d, null, { title: 'A', status: 'todo' }, 'n', state));
+  await editor.persistTask(d, null, { title: 'A', status: 'todo' }, 'n', state);
+  assert.equal(d.calls.filter((c) => c[0] === 'add').length, 1);
+  assert.deepEqual(d.calls.at(-2), ['update', 'new1', { title: 'A' }]);
+  assert.deepEqual(d.calls.at(-1), ['notes', 'new1', 'n']);
+});
+
+test('persistTask skips notes for a new task with none', async () => {
+  const d = fakeData();
+  await editor.persistTask(d, null, { title: 'A' }, '  ', {});
+  assert.deepEqual(d.calls.map((c) => c[0]), ['add']);
+});

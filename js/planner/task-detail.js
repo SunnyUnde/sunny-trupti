@@ -37,7 +37,7 @@ const stamp = (d) => el('span', formatStamp(d, 'en'), formatStamp(d, 'mr'), 'pf-
 
 export function openTaskDetail(ctx, id) {
   const { member, data, toast } = ctx;
-  const s = { task: null, labels: [], members: new Map(), comments: [] };
+  const s = { task: null, labels: [], members: new Map() };
   const stops = [];
   const { dlg, body, title } = openDialog('Task', 'काम');
   dlg.addEventListener('close', () => stops.forEach((stop) => stop()));
@@ -63,9 +63,7 @@ export function openTaskDetail(ctx, id) {
   const notesSave = el('button', 'Save notes', 'नोंदी जतन करा', 'btn-quiet');
   notesSave.type = 'button';
   notesSave.onclick = () => data.saveNotes(id, notesBox.value).then(
-    () => { dirty = false; toast('Notes saved.', 'नोंदी जतन केल्या.'); }, showWrong);
-  let dirty = false;
-  notesBox.oninput = () => { dirty = true; };
+    () => toast('Notes saved.', 'नोंदी जतन केल्या.'), showWrong);
 
   const comments = el('div', undefined, undefined, 'pf-list');
   const commentIn = document.createElement('textarea');
@@ -79,7 +77,7 @@ export function openTaskDetail(ctx, id) {
     const t = commentIn.value.trim();
     if (!t) return;
     commentBtn.disabled = true;
-    data.addComment(id, t).then(() => {
+    data.addComment(id, t, ctx.user).then(() => {
       commentIn.value = '';
       toast('Comment added.', 'टिप्पणी जोडली.');
     }, showWrong).finally(() => { commentBtn.disabled = false; });
@@ -148,13 +146,12 @@ export function openTaskDetail(ctx, id) {
   }
 
   function renderComments(list) {
-    s.comments = list;
     comments.replaceChildren();
     if (!list.length) comments.append(dual('p', ['No comments yet.', 'अजून टिप्पण्या नाहीत.'], 'pf-note'));
     for (const c of list) {
       const row = el('article', undefined, undefined, 'pf-comment');
       const head = el('p', undefined, undefined, 'pf-comment-head');
-      const photo = safePhoto(c.by === member.uid ? member.photoURL : s.members.get(c.by)?.photoURL);
+      const photo = safePhoto(c.byPhoto);
       if (photo) {
         const img = document.createElement('img');
         img.src = photo;
@@ -163,7 +160,7 @@ export function openTaskDetail(ctx, id) {
         img.height = 28;
         head.append(img);
       }
-      head.append(who(c.by), stamp(c.at ? c.at.toDate() : null));
+      head.append(c.byName ? text('strong', c.byName) : el('strong', OTHER[0], OTHER[1]), stamp(c.at ? c.at.toDate() : null));
       row.append(head, text('p', c.text));
       if (c.by === member.uid) {
         const del = el('button', 'Delete', 'काढा', 'btn-quiet');
@@ -196,6 +193,7 @@ export function openTaskDetail(ctx, id) {
     return sec;
   };
   const noteField = el('div', undefined, undefined, 'pf-field');
+  noteField.hidden = true; // shown after the first notes snapshot, so it never shows a blank that could overwrite
   noteField.append(notesLabel, notesBox, notesSave);
   const commentField = el('div', undefined, undefined, 'pf-field');
   commentField.append(commentLabel, commentIn, commentBtn);
@@ -215,7 +213,8 @@ export function openTaskDetail(ctx, id) {
   }, showWrong));
   stops.push(data.watchLabels((l) => { s.labels = l; if (s.task) renderTask(); }, showWrong));
   stops.push(data.watchNotes(id, (n) => {
-    if (!dirty) notesBox.value = n ? n.text : '';
+    notesBox.value = n ? n.text : '';
+    noteField.hidden = false;
   }, showWrong));
   stops.push(data.watchComments(id, renderComments, showWrong));
   stops.push(data.watchHistory(id, renderHistory, showWrong));
@@ -223,7 +222,6 @@ export function openTaskDetail(ctx, id) {
     stops.push(data.watchMembers((list) => {
       s.members = new Map(list.map((m) => [m.id, m]));
       if (s.task) renderTask();
-      renderComments(s.comments);
     }, showWrong));
   }
   retranslate();

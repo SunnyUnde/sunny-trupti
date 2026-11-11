@@ -110,7 +110,9 @@ export function createPlannerData({ db, fs, uid }) {
 
     watchComments: (id, cb, onError) =>
       watchCol(fs.query(col(`tasks/${id}/comments`), fs.orderBy('at')), cb, onError),
-    addComment: (id, text) => create(`tasks/${id}/comments`, { text, by: uid, at: now() }),
+    // Name and photo are copied at write time, since Editors cannot read members.
+    addComment: (id, text, user) => create(`tasks/${id}/comments`,
+      { text, by: uid, byName: user.displayName ?? '', byPhoto: user.photoURL ?? null, at: now() }),
     deleteComment: (id, cid) => remove(`tasks/${id}/comments/${cid}`),
 
     watchHistory: (id, cb, onError) =>

@@ -157,9 +157,11 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read, delete: if canPlanParent();
         allow create: if canPlanParent()
-          && request.resource.data.keys().hasOnly(['text', 'by', 'at'])
+          && request.resource.data.keys().hasOnly(['text', 'by', 'byName', 'byPhoto', 'at'])
           && request.resource.data.text is string
           && request.resource.data.by == request.auth.uid
+          && request.resource.data.byName == request.auth.token.get('name', '')
+          && (request.resource.data.byPhoto == null || request.resource.data.byPhoto is string)
           && request.resource.data.at is timestamp;
         allow update: if canPlanParent()
           && resource.data.by == request.auth.uid

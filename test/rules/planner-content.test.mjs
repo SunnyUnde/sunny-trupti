@@ -112,7 +112,7 @@ test('reader never writes tasks or their subcollections', async () => {
   await assertFails(deleteDoc(t(kaka, 't_all')));
   await assertFails(setDoc(notes(kaka, 't_all'), { text: 'x' }));
   await assertFails(deleteDoc(notes(kaka, 't_all')));
-  await assertFails(setDoc(comment(kaka, 't_all', 'c2'), { text: 'x', by: 'kaka', at: serverTimestamp() }));
+  await assertFails(setDoc(comment(kaka, 't_all', 'c2'), { text: 'x', by: 'kaka', byName: 'kaka', byPhoto: null, at: serverTimestamp() }));
   await assertFails(deleteDoc(comment(kaka, 't_all')));
   await assertFails(setDoc(hist(kaka, 't_all', 'h2'), { from: 'todo', to: 'done', by: 'kaka', at: serverTimestamp() }));
   await assertFails(deleteDoc(hist(kaka, 't_all')));
@@ -282,10 +282,18 @@ test('other private docs are denied', async () => {
 // ===== comments =====
 
 test('comment create requires by == caller and a visible task', async () => {
-  const c = (by) => ({ text: 'ok', by, at: serverTimestamp() });
+  const c = (by) => ({ text: 'ok', by, byName: by, byPhoto: null, at: serverTimestamp() });
   await assertSucceeds(setDoc(comment(aai, 't_b', 'c2'), c('aai')));
   await assertFails(setDoc(comment(aai, 't_b', 'c3'), c('trupti')));
   await assertFails(setDoc(comment(aai, 't_g', 'c4'), c('aai')));
+});
+
+test('comment create copies the caller name; photo is a string or null; no extra keys', async () => {
+  const c = (extra) => ({ text: 'ok', by: 'aai', byName: 'aai', byPhoto: null, at: serverTimestamp(), ...extra });
+  await assertSucceeds(setDoc(comment(aai, 't_b', 'n1'), c({ byPhoto: 'https://x.test/a.png' })));
+  await assertFails(setDoc(comment(aai, 't_b', 'n2'), c({ byName: 'Trupti' })));
+  await assertFails(setDoc(comment(aai, 't_b', 'n3'), c({ byPhoto: 5 })));
+  await assertFails(setDoc(comment(aai, 't_b', 'n4'), c({ extra: 1 })));
 });
 
 test('only the author edits comment text, and only the text', async () => {
@@ -305,7 +313,7 @@ test('any planner who can see the task deletes a comment; others cannot', async 
 
 test('no subcollection writes under a task that does not exist', async () => {
   await assertFails(setDoc(notes(trupti, 'does_not_exist'), { text: 'x' }));
-  await assertFails(setDoc(comment(trupti, 'does_not_exist', 'c9'), { text: 'x', by: 'trupti', at: serverTimestamp() }));
+  await assertFails(setDoc(comment(trupti, 'does_not_exist', 'c9'), { text: 'x', by: 'trupti', byName: 'trupti', byPhoto: null, at: serverTimestamp() }));
   await assertFails(setDoc(hist(trupti, 'does_not_exist', 'h9'), { from: 'todo', to: 'done', by: 'trupti', at: serverTimestamp() }));
 });
 

@@ -210,9 +210,9 @@ test('add and update a task; notes and comments round trip', async () => {
   assert.deepEqual([t.title, t.createdBy, t.ownerName], ['Book caterer', 'aai', 'Aai']);
   await d.saveNotes(id, 'call at 5');
   assert.equal((await first((cb, e) => d.watchNotes(id, cb, e), (n) => n?.text === 'call at 5')).text, 'call at 5');
-  await d.addComment(id, 'done?');
+  await d.addComment(id, 'done?', { displayName: 'aai', photoURL: 'https://x.test/a.png' });
   const [c] = await first((cb, e) => d.watchComments(id, cb, e), (l) => l.length === 1);
-  assert.deepEqual([c.text, c.by], ['done?', 'aai']);
+  assert.deepEqual([c.text, c.by, c.byName, c.byPhoto], ['done?', 'aai', 'aai', 'https://x.test/a.png']);
   await data('trupti').deleteComment(id, c.id);
   assert.deepEqual(await raw(`tasks/${id}/comments`), []);
 });
