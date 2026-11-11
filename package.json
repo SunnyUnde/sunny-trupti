@@ -1,0 +1,13 @@
+{
+  "name": "sunny-and-trupti",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js test/*.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-wedding \"node --test test/rules/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "firebase": "13.1.0",
+    "firebase-tools": "15.34.1"
+  }
+}

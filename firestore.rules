@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== SHARED HELPERS =====
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function member() {
+      return get(/databases/$(database)/documents/members/$(request.auth.uid)).data;
+    }
+    function isMember() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid));
+    }
+    function isOwner() {
+      return isMember() && member().role == 'owner';
+    }
+    function isEditor() {
+      return isMember() && member().role in ['owner', 'editor'];
+    }
+    function sideOf() {
+      return member().side;
+    }
+
+    // ===== PLANNER =====
+    // Denied until the planner rules land.
+    match /members/{uid} { allow read, write: if false; }
+    match /tasks/{id} { allow read, write: if false; }
+
+    // ===== REGISTRY =====
+    match /registry/{rest=**} { allow read, write: if false; }
+    // ===== END REGISTRY =====
+  }
+}
