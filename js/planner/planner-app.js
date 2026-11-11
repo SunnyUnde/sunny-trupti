@@ -28,6 +28,7 @@ function viewFor(member) {
 }
 
 countdown();
+retranslate();
 document.getElementById('help-link').href = helpUrl();
 const gateEl = document.getElementById('gate');
 const appEl = document.getElementById('app');

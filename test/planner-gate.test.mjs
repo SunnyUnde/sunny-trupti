@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const { gateState } = await import('../js/planner/planner-gate.js');
+const { gateState, gateBody } = await import('../js/planner/planner-gate.js');
 
 const CHROME = 'Mozilla/5.0 (Linux; Android 14) Chrome/120 Mobile Safari/537.36';
 const WA = 'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36 Instagram 300.0';
@@ -33,4 +33,17 @@ test('no member and no request is no_access', () => {
 test('member removed mid-session returns no_access', () => {
   assert.equal(gateState({ ua: CHROME, user, member, request: null }), 'member');
   assert.equal(gateState({ ua: CHROME, user, member: null, request: null }), 'no_access');
+});
+
+test('gateBody: an error is shown instead of Loading forever', () => {
+  const base = { state: 'no_access', authKnown: true, ready: false };
+  assert.equal(gateBody({ ...base, error: false }), 'loading');
+  assert.equal(gateBody({ ...base, error: true }), 'error');
+  assert.equal(gateBody({ ...base, ready: true, error: true }), 'no_access');
+});
+
+test('gateBody: signed out waits for auth, in-app browser never does', () => {
+  assert.equal(gateBody({ state: 'signed_out', authKnown: false }), 'loading');
+  assert.equal(gateBody({ state: 'signed_out', authKnown: true }), 'signed_out');
+  assert.equal(gateBody({ state: 'in_app_browser', authKnown: false }), 'in_app_browser');
 });

@@ -1,16 +1,8 @@
 // Shared UI helpers for the planner.
 let current = null;
 
-function region() {
-  let r = document.getElementById('toast-region');
-  if (!r) {
-    r = document.createElement('div');
-    r.id = 'toast-region';
-    r.setAttribute('aria-live', 'polite');
-    document.body.append(r);
-  }
-  return r;
-}
+// The live region is in planner.html from load, so screen readers register it.
+const region = () => document.getElementById('toast-region');
 
 const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
 

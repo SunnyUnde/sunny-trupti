@@ -10,6 +10,14 @@ export function gateState({ ua, user, member, request }) {
   return 'no_access';
 }
 
+// Pure: what the gate body shows. An error must never hide behind Loading.
+export function gateBody({ state, authKnown, ready, error }) {
+  if (state === 'in_app_browser') return 'in_app_browser';
+  if (state === 'signed_out') return authKnown ? 'signed_out' : 'loading';
+  if (!ready) return error ? 'error' : 'loading';
+  return state;
+}
+
 const COPY = {
   loading: ['Loading', 'लोड होत आहे'],
   welcome: ['Welcome to our wedding planner.', 'आमच्या लग्नाच्या नियोजनात स्वागत आहे.'],
@@ -74,10 +82,11 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
   }
 
   function view(state) {
-    if (state === 'signed_out' && s.user === null && !s.authKnown) return [el('p', 'loading')];
-    if (state === 'in_app_browser') return inApp();
-    if (state === 'signed_out') return signedOut();
-    if (!s.ready) return [el('p', 'loading')];
+    const body = gateBody({ state, authKnown: s.authKnown, ready: s.ready, error: s.error });
+    if (body === 'loading') return [el('p', 'loading')];
+    if (body === 'error') return [...errorLine(), signOutBtn()];
+    if (body === 'in_app_browser') return inApp();
+    if (body === 'signed_out') return signedOut();
     if (state === 'pending') {
       return [el('p', s.sent ? 'sent' : 'pending', { className: 'gate-msg' }), signOutBtn()];
     }
@@ -88,7 +97,7 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
 
   function signOutBtn() {
     const b = el('button', 'signOut', { type: 'button', className: 'btn-quiet' });
-    b.onclick = () => authFns.signOut(auth);
+    b.onclick = () => { s.error = false; authFns.signOut(auth); };
     return b;
   }
 
@@ -102,6 +111,7 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
     const b = el('button', 'request', { type: 'button', className: 'btn-main' });
     b.onclick = async () => {
       b.disabled = true;
+      s.error = false;
       try {
         const u = s.user;
         await data(u.uid).requestAccess({ email: u.email, name: u.displayName || u.email, photoURL: httpUrl(u.photoURL) });
@@ -118,7 +128,11 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
     const b = el('button', 'copy', { type: 'button', className: 'btn-main' });
     const note = el('p', null, { className: 'gate-note', role: 'status' });
     const input = el('input', null, { type: 'text', readOnly: true, value: url, className: 'gate-url' });
-    input.setAttribute('aria-label', 'Link');
+    const label = el('span', null, { id: 'gate-url-label', className: 'sr-only' });
+    label.dataset.en = 'Page link';
+    label.dataset.mr = 'पानाची लिंक';
+    label.textContent = 'Page link';
+    input.setAttribute('aria-labelledby', 'gate-url-label');
     input.hidden = !s.fallbackUrl;
     const say = (k) => { note.dataset.en = COPY[k][0]; note.dataset.mr = COPY[k][1]; retranslate(); };
     b.onclick = async () => {
@@ -133,7 +147,7 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
         say('copyManual');
       }
     };
-    return [el('p', 'inApp', { className: 'gate-msg' }), b, note, input];
+    return [el('p', 'inApp', { className: 'gate-msg' }), b, note, label, input];
   }
 
   async function signIn() {
@@ -156,7 +170,7 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
   authFns.onAuthStateChanged(auth, (user) => {
     stop.forEach((f) => f());
     stop = [];
-    Object.assign(s, { user, member: null, request: null, ready: false, sent: false, authKnown: true, error: false });
+    Object.assign(s, { user, member: null, request: null, ready: false, sent: false, authKnown: true });
     if (user) {
       const d = data(user.uid);
       const got = { member: false, request: false };
