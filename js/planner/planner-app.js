@@ -35,7 +35,11 @@ function showView(member, user) {
     retranslate();
     return;
   }
-  ctx.switchMode = (mode) => data.setMode(mode).catch(() => toast(WRONG[0], WRONG[1]));
+  // The tab to open is read once by mountFull when the prefs snapshot re-mounts the view.
+  ctx.switchMode = (mode, tab) => {
+    ctx.startTab = tab;
+    return data.setMode(mode).catch(() => { delete ctx.startTab; toast(WRONG[0], WRONG[1]); });
+  };
   let mounted = null;
   let unmountView = null;
   const mountMode = (mode) => {

@@ -1,6 +1,6 @@
 // Seeds the 'demo-wedding' emulators (Firestore :8080, Auth :9099) for manual
 // walks. Re-runnable: it clears both first. Run: node test/rules/seed-dev.mjs
-// Headless sign-in: email and password 'password' of the users below (uid sunny, trupti, aai, kaka).
+// Headless sign-in: email and password 'password' of the users below (uid sunny, trupti, aai, dada, kaka).
 
 const PROJECT = 'demo-wedding';
 const FS = 'http://127.0.0.1:8080';
@@ -28,7 +28,7 @@ const put = async (path, data) => {
 
 // Auth emulator users; the Google popup matches on email.
 const people = [
-  ['sunny', 'owner', 'groom'], ['trupti', 'owner', 'bride'], ['aai', 'editor', 'bride'], ['kaka', 'reader', null],
+  ['sunny', 'owner', 'groom'], ['trupti', 'owner', 'bride'], ['aai', 'editor', 'bride'], ['dada', 'editor', 'groom'], ['kaka', 'reader', null],
 ];
 for (const [uid, role, side] of people) {
   await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=x`, {
@@ -51,7 +51,7 @@ for (const n of CAT) await put(`labels/${labelId(n)}`, { name: n, group: 'catego
 const L = (...names) => names.map(labelId);
 const tasks = [
   ['t1', 'Book the photographer', '2026-11-05', 'sunny', 'Sunny', 'todo', L('Photo/Video'), 'everyone'], // overdue
-  ['t2', 'Order the invitations', '2026-11-20', 'trupti', 'Trupti', 'progress', L('Invitations', 'Wedding day (24 Jan)'), 'everyone'],
+  ['t2', 'Order the invitations', '2026-11-20', 'trupti', 'Trupti', 'progress', L('Invitations', 'Wedding day (24 Jan)', 'Sangeet (23 Jan)'), 'everyone'],
   ['t3', 'Confirm the caterer menu', '2026-12-10', 'aai', 'Aai', 'done', L('Food', 'Kelvan'), 'everyone'],
   ['t4', 'Shortlist jewellers', '2026-12-01', 'sunny', 'Sunny', 'todo', L('Jewellery'), 'planners'],
   ['t5', 'Groom family outfits', '2026-12-15', 'sunny', 'Sunny', 'todo', L('Attire'), 'groom'],
@@ -73,4 +73,19 @@ const events = [
 for (const [id, date, time, title, place, host, visibility] of events) {
   await put(`events/${id}`, { date, time, title, place, host, note: '', visibility });
 }
-console.log('seeded: members sunny trupti aai kaka, 20 labels, 6 tasks, 4 events');
+// A day label linked to an 'everyone' event.
+await put(`labels/${labelId('Sangeet (23 Jan)')}`, { name: 'Sangeet (23 Jan)', group: 'day', color: 'gold', eventId: 'e2' });
+await put('settings/budget', { total: 2500000 });
+const vendors = [
+  ['v1', 'Venue', 'Laxmi Trimbak Mangal Karyalay', '98220 00001', 'booked', 400000, 100000, 'both'],
+  ['v2', 'Photo/Video', 'Frame Story', '98220 00002', 'shortlisted', 180000, 0, 'sunny'],
+  ['v3', 'Food', 'Shree Caterers', '98220 00003', 'to_find', 0, 0, 'bride_family'],
+];
+for (const [id, category, name, contact, status, quote, paid, owner] of vendors) {
+  await put(`vendors/${id}`, { category, name, contact, status, quote, paid, owner, notes: '' });
+}
+// Pending requests, as Google users would write them.
+for (const [uid, name] of [['mama', 'Mama'], ['mavshi', 'Mavshi']]) {
+  await put(`access_requests/${uid}`, { email: `${uid}@example.com`, name, photoURL: null, requestedAt: new Date('2026-11-11T08:30:00Z') });
+}
+console.log('seeded: members sunny trupti aai dada kaka, 20 labels, 6 tasks, 4 events, 3 vendors, 2 requests (mama, mavshi)');

@@ -9,6 +9,9 @@ import {
 import { openTaskEditor, visibilityChoices, visibilityLabel } from './task-editor.js';
 import { openTaskDetail, statusMessage } from './task-detail.js';
 import { viewToggle, modeLink } from './planner-ui.js';
+import { renderEvents } from './view-events.js';
+import { createVendors } from './view-vendors.js';
+import { createAccess } from './view-access.js';
 
 // ===== PURE HELPERS =====
 export const WINDOWS = {
@@ -73,7 +76,13 @@ export { statusMessage };
 const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];
 const LOADING = ['Loading', 'लोड होत आहे'];
 const NOTHING = ['Nothing here yet.', 'इथे अजून काही नाही.'];
-const NEEDS = { home: ['tasks', 'vendors', 'events', 'budget'], tasks: ['tasks', 'labels'] };
+const NEEDS = {
+  home: ['tasks', 'vendors', 'events', 'budget'],
+  tasks: ['tasks', 'labels'],
+  events: ['events', 'labels', 'tasks'],
+  vendors: ['vendors', 'budget'],
+  access: ['requests', 'members'],
+};
 const STATUS_IDS = ['todo', 'progress', 'done'];
 
 function chipRow(titleEnMr, items, selected, onToggle) {
@@ -98,16 +107,22 @@ export function mountFull(root, ctx) {
   const { member, data, toast } = ctx;
   const s = {
     tasks: null, labels: [], events: null, vendors: null, budget: null, failed: {}, loaded: {},
-    mode: 'planner', tab: 'home', filterOpen: false,
+    requests: [], members: [], mode: 'planner', tab: ctx.startTab || 'home', filterOpen: false,
     f: { statuses: [], owners: [], visibilities: [], day: [], category: [] },
   };
+  delete ctx.startTab;
+  const owner = member.role === 'owner';
   const stops = [];
   let stopFamily = null;
+  const vendorsView = createVendors(ctx, () => render());
+  const accessView = createAccess(ctx, () => render());
 
   const toggle = viewToggle(setMode);
   const tablist = el('div', undefined, undefined, 'fv-tabs');
   tablist.setAttribute('role', 'tablist');
-  const tabButtons = [['home', 'Home', 'मुख्य'], ['tasks', 'Tasks', 'कामे']].map(([id, en, mr]) => {
+  const tabDefs = [['home', 'Home', 'मुख्य'], ['tasks', 'Tasks', 'कामे'], ['events', 'Events', 'कार्यक्रम'], ['vendors', 'Vendors', 'विक्रेते']];
+  if (owner) tabDefs.push(['access', 'Access', 'प्रवेश']);
+  const tabButtons = tabDefs.map(([id, en, mr]) => {
     const b = el('button', en, mr, 'fv-tab');
     b.type = 'button';
     b.setAttribute('role', 'tab');
@@ -253,14 +268,29 @@ export function mountFull(root, ctx) {
     return wrap;
   }
 
+  function renderTab(today) {
+    if (s.tab === 'home') return renderHome(today);
+    if (s.tab === 'tasks') return renderTasks(today);
+    if (s.tab === 'events') return renderEvents(ctx, { events: s.events, labels: s.labels, tasks: s.tasks });
+    if (s.tab === 'vendors') return vendorsView.render({ vendors: s.vendors, budget: s.budget, members: s.members });
+    return accessView.render({ requests: s.requests, members: s.members });
+  }
+
   function render() {
     if (s.mode !== 'planner') return;
     for (const [id, b] of tabButtons) b.setAttribute('aria-selected', String(id === s.tab));
+    const access = tabButtons.find(([id]) => id === 'access');
+    if (access) {
+      const n = s.requests.length;
+      access[1].dataset.en = n ? `Access (${n})` : 'Access';
+      access[1].dataset.mr = n ? `प्रवेश (${mrDigits(n)})` : 'प्रवेश';
+      access[1].textContent = access[1].dataset.en;
+    }
     const needs = NEEDS[s.tab];
     let body;
     if (needs.some((w) => s.failed[w])) body = dual('p', WRONG, 'fv-empty');
     else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty');
-    else body = s.tab === 'home' ? renderHome(todayIST(new Date())) : renderTasks(todayIST(new Date()));
+    else body = renderTab(todayIST(new Date()));
     panel.replaceChildren(body);
     retranslate();
   }
@@ -274,6 +304,10 @@ export function mountFull(root, ctx) {
   stops.push(data.watchLabels(...watcher('labels', (l) => { s.labels = l; })));
   stops.push(data.watchVendors(...watcher('vendors', (v) => { s.vendors = v; })));
   stops.push(data.watchBudget(...watcher('budget', (b) => { s.budget = b; })));
+  if (owner) {
+    stops.push(data.watchRequests(...watcher('requests', (r) => { s.requests = r; })));
+    stops.push(data.watchMembers(...watcher('members', (m) => { s.members = m.map((x) => ({ ...x, uid: x.id })); })));
+  }
 
   root.replaceChildren(toggle.node, plannerBox, familyBox);
   setMode('planner');

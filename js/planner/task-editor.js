@@ -81,7 +81,7 @@ export async function persistTask(data, task, fields, notes, state) {
 // ===== DOM =====
 const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];
 
-function field(labelEn, labelMr, input) {
+export function field(labelEn, labelMr, input) {
   const wrap = el('div', undefined, undefined, 'pf-field');
   const lab = el('label', labelEn, labelMr);
   input.id = input.id || `f-${Math.random().toString(36).slice(2)}`;
@@ -90,7 +90,7 @@ function field(labelEn, labelMr, input) {
   return wrap;
 }
 
-function select(choices, value, onChange) {
+export function select(choices, value, onChange) {
   const s = document.createElement('select');
   for (const c of choices) {
     const o = el('option', c.en, c.mr);

@@ -52,7 +52,7 @@ export function mountSimple(root, ctx) {
   const badge = el('p', undefined, undefined, 'sp-badge');
   const banner = el('button', undefined, undefined, 'btn-quiet sp-banner');
   banner.type = 'button';
-  banner.onclick = () => ctx.switchMode('full');
+  banner.onclick = () => ctx.switchMode('full', 'access');
   const tablist = el('div', undefined, undefined, 'fv-tabs');
   tablist.setAttribute('role', 'tablist');
   const tabButtons = [['today', 'Today', 'आज'], ['schedule', 'Schedule', 'कार्यक्रम'], ['add', 'Add', 'जोडा']].map(([id, en, mr]) => {

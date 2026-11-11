@@ -69,9 +69,9 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .fv-progress-label { font-size: 20px; color: var(--maroon-ink); margin-bottom: 8px; }
 .fv-track { height: 16px; background: var(--ivory-2); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
 .fv-fill { height: 100%; background: var(--maroon); }
-.fv-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.fv-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .fv-tab {
-  flex: 1; min-height: 48px; padding: 8px 6px; font: inherit; font-size: 18px; cursor: pointer;
+  flex: 1 1 auto; min-height: 48px; padding: 8px 12px; font: inherit; font-size: 18px; cursor: pointer;
   color: var(--maroon-ink); background: transparent; border: 1px solid var(--rule); border-radius: 8px;
 }
 .fv-tab[aria-selected="true"] { background: var(--maroon); color: var(--on-maroon); border-color: var(--maroon); }
@@ -183,3 +183,20 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .sp-banner[hidden] { display: none; }
 .sp-modelink { display: inline-flex; align-items: center; min-height: 48px; margin-top: 12px; padding: 0; font: inherit; font-size: 18px; color: var(--maroon-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
 .sp-modelink:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Events, Vendors, Access (planners and owners only). */
+.pv-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.pv-cards .fv-card p { font-family: var(--font-display); font-size: 24px; color: var(--maroon-ink); }
+.pv-budget { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.pv-budget .pf-field { align-self: stretch; }
+.pv-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+.pv-scroll:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.pv-table { width: 100%; border-collapse: collapse; font-size: 18px; color: var(--text); }
+.pv-table th, .pv-table td { padding: 8px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.pv-table th { color: var(--maroon-ink); font-weight: 600; background: var(--ivory-2); }
+.pa-person { display: flex; align-items: center; gap: 12px; }
+.pa-person img { border-radius: 50%; flex: none; }
+.pa-person p { overflow-wrap: anywhere; }
+.pa-person strong { overflow-wrap: anywhere; }
+.pa-editor { display: flex; flex-direction: column; gap: 4px; flex-basis: 100%; align-items: flex-start; }
+.pf-actions { align-items: flex-start; }
