@@ -50,10 +50,11 @@ pretty URL: open `engagement.html` instead when serving from the filesystem.
 
 ## Tests
 ```
-node --test test/countdown.test.js test/intro.test.js
+npm test            # unit tests
+npm run test:rules  # Firestore rules on the emulator (Java 21)
 ```
-Run the two files explicitly (a bare `node --test test/` directory run reports a
-spurious aggregate failure while every individual test passes).
+Both use file globs, because a bare `node --test test/` directory run reports a
+spurious aggregate failure while every individual test passes.
 
 ## Fonts
 Self-hosted in `fonts/`, declared in `css/fonts.css`. This keeps the critical
@@ -70,6 +71,39 @@ To regenerate after changing a family or weight range: fetch each Google Fonts
 `css2` URL with a browser User-Agent (otherwise you get TTF, not woff2), keep
 only the `@font-face` blocks whose subset comment you want, download each
 `woff2` into `fonts/`, and rewrite each `src` URL to the local path.
+
+## Planner setup
+`/planner` is an unlisted planning page (robots noindex). Google sign-in, Firestore
+on the Firebase Spark plan, and security rules in `firestore.rules` are the only
+enforcement. Day-to-day use needs no setup; these steps are one-time.
+
+1. **Firebase project** (personal Gmail): create the project, enable
+   Authentication with the Google provider, add `sunnyandtrupti.com` to the
+   authorised domains, create a Firestore database, and register App Check with
+   a reCAPTCHA v3 key (start in monitoring mode). Put the web config into
+   `js/firebase-init.js` and the site key into its App Check call, and set
+   `HELP_WHATSAPP` in `js/planner/planner-config.js`.
+2. **Rules:** run `npm test` and `npm run test:rules` (needs Java 21), then
+   `npx firebase deploy --only firestore:rules --project <project-id>`.
+3. **Starter labels:**
+   `ACCESS_TOKEN=$(gcloud auth print-access-token) node test/rules/seed-labels.mjs <project-id>`.
+   Creates the 20 starter labels; re-running skips labels that already exist,
+   so renames and recolours are kept.
+4. **Owners:** Sunny and Trupti each open `/planner`, sign in, and press
+   Request access. In the Firebase console, create `members/<uid>` for each
+   (copy the uid from their `access_requests` doc) with `role: "owner"`,
+   `side: "groom"` or `"bride"`, and `email`, `name`, `photoURL`,
+   `approvedAt` (timestamp), `approvedBy: "console"`. Then delete both
+   `access_requests` docs. Adding a further Owner works the same way; the page
+   can never create or edit an Owner.
+5. **Everyone else** signs in and requests access; an Owner approves them from
+   the Access tab in Full mode, as a Reader or as an Editor on the Owner's own
+   side.
+
+Local development: `npx firebase emulators:start --only firestore,auth --project demo-wedding`,
+then `node test/rules/seed-dev.mjs` and serve the site on `localhost`. The page
+talks to the emulators on localhost; seed users sign in with email and password
+`password` from the browser console (there is no password UI in the page).
 
 ## Deploy
 Static site, no build step. Push to `main`; GitHub Pages serves it at the domain

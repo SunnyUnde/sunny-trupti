@@ -2,6 +2,8 @@
 // walks. Re-runnable: it clears both first. Run: node test/rules/seed-dev.mjs
 // Headless sign-in: email and password 'password' of the users below (uid sunny, trupti, aai, dada, kaka).
 
+import { starterLabels, labelId } from './starter-labels.mjs';
+
 const PROJECT = 'demo-wedding';
 const FS = 'http://127.0.0.1:8080';
 const AUTH = 'http://127.0.0.1:9099';
@@ -41,12 +43,7 @@ for (const [uid, role, side] of people) {
   });
 }
 
-const DAY = ['Muhurt Karane', 'Kelvan', 'Haldi & Mehendi (23 Jan)', 'Sangeet (23 Jan)', 'Wedding day (24 Jan)', 'Gruhapravesh', 'Satyanarayan', 'After the wedding'];
-const CAT = ['Rituals', 'Venue', 'Food', 'Attire', 'Jewellery', 'Decor', 'Photo/Video', 'Guests', 'Travel & Stay', 'Invitations', 'Payments', 'Legal'];
-const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
-const labelId = (s) => `lbl-${slug(s)}`;
-for (const n of DAY) await put(`labels/${labelId(n)}`, { name: n, group: 'day', color: 'gold' });
-for (const n of CAT) await put(`labels/${labelId(n)}`, { name: n, group: 'category', color: 'maroon' });
+for (const { id, name, group, color } of starterLabels()) await put(`labels/${id}`, { name, group, color });
 
 const L = (...names) => names.map(labelId);
 const tasks = [
