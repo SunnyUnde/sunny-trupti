@@ -84,8 +84,9 @@ service cloud.firestore {
       function validRequest() {
         let d = request.resource.data;
         return d.keys().hasOnly(['email', 'name', 'photoURL', 'requestedAt'])
+          && request.auth.token.firebase.sign_in_provider == 'google.com'
           && d.email == request.auth.token.email
-          && d.name == request.auth.token.name
+          && d.name == request.auth.token.get('name', '')
           && (d.get('photoURL', null) == null || d.photoURL is string)
           && d.requestedAt is timestamp;
       }

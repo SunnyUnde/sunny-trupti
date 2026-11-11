@@ -1,6 +1,8 @@
 import { test, before, after, beforeEach } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, collection, getDoc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc, collection, getDoc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp, deleteField, writeBatch,
+} from 'firebase/firestore';
 import { setupEnv, seed, asAnon, asGuest, asOwner, asPlannerEditor, asReader } from './helpers.mjs';
 
 let env;
@@ -70,6 +72,30 @@ test('guest cannot create a request with another name', async () => {
 
 test('guest cannot create a request with extra fields', async () => {
   await assertFails(setDoc(r(guest, 'guest'), request('guest', { role: 'owner' })));
+});
+
+test('a password sign-in with the same email cannot create a request', async () => {
+  const db = env.authenticatedContext('pw', {
+    email: 'pw@example.com', name: 'pw', firebase: { sign_in_provider: 'password' },
+  }).firestore();
+  await assertFails(setDoc(r(db, 'pw'), request('pw')));
+});
+
+test('a google account without a display name requests with name empty', async () => {
+  const db = env.authenticatedContext('noname', {
+    email: 'noname@example.com', firebase: { sign_in_provider: 'google.com' },
+  }).firestore();
+  await assertFails(setDoc(r(db, 'noname'), request('noname', { name: 'Someone' })));
+  await assertSucceeds(setDoc(r(db, 'noname'), request('noname', { name: '' })));
+});
+
+test('guest cannot batch-create its request and its own members doc', async () => {
+  const batch = writeBatch(guest);
+  batch.set(r(guest, 'guest'), request('guest'));
+  batch.set(m(guest, 'guest'), approval('guest', 'reader', null, 'guest'));
+  await assertFails(batch.commit());
+  const snap = await assertSucceeds(getDoc(r(guest, 'guest')));
+  if (snap.exists()) throw new Error('batch must not half-apply');
 });
 
 test('guest cannot create access_requests/other', async () => {
@@ -198,6 +224,12 @@ test('reader approval with a side is denied', async () => {
   await assertFails(setDoc(m(sunny, 'guest'), approval('guest', 'reader', 'groom', 'sunny')));
 });
 
+test('approval that omits side is denied', async () => {
+  await seedRequest('guest');
+  const { side, ...noSide } = approval('guest', 'reader', null, 'sunny');
+  await assertFails(setDoc(m(sunny, 'guest'), noSide));
+});
+
 test('approval without an access request is denied', async () => {
   await assertFails(setDoc(m(sunny, 'guest'), approval('guest', 'reader', null, 'sunny')));
 });
@@ -298,6 +330,12 @@ test('email, name and photoURL are immutable', async () => {
   await assertFails(updateDoc(m(trupti, 'aai'), { email: 'x@example.com' }));
   await assertFails(updateDoc(m(trupti, 'aai'), { name: 'x' }));
   await assertFails(updateDoc(m(sunny, 'kaka'), { photoURL: 'https://x' }));
+});
+
+test('owner updates that remove photoURL or approvedBy are denied', async () => {
+  await assertFails(updateDoc(m(sunny, 'kaka'), { photoURL: deleteField() }));
+  await assertFails(updateDoc(m(sunny, 'kaka'), { approvedBy: deleteField() }));
+  await assertFails(updateDoc(m(trupti, 'aai'), { approvedBy: deleteField() }));
 });
 
 test('members cannot edit or delete their own doc', async () => {
