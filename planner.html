@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Wedding Planner</title>
+  <meta name="theme-color" content="#7a1f2b" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17100f" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/planner.css">
+  <script src="js/i18n.js" defer></script>
+  <script type="module" src="js/planner/planner-app.js"></script>
+</head>
+<body class="planner">
+  <header class="pl-header">
+    <div class="pl-names">
+      <h1 data-en="Sunny &amp; Trupti" data-mr="सनी आणि तृप्ती">Sunny &amp; Trupti</h1>
+      <p id="days-to-go" data-en="" data-mr=""></p>
+    </div>
+    <div class="lang-switch" role="group" aria-label="Language / भाषा">
+      <button type="button" data-lang-btn="mr">मराठी</button>
+      <button type="button" data-lang-btn="en">English</button>
+    </div>
+    <a class="pl-help" id="help-link" href="https://wa.me/PLACEHOLDER" data-en="Need help? WhatsApp Sunny" data-mr="मदत हवी आहे? सनीला WhatsApp करा">Need help? WhatsApp Sunny</a>
+  </header>
+  <main class="pl-main">
+    <section id="gate" class="gate"><p data-en="Loading" data-mr="लोड होत आहे">Loading</p></section>
+    <section id="app" hidden></section>
+  </main>
+</body>
+</html>

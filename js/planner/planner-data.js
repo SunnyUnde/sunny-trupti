@@ -50,6 +50,7 @@ export function createPlannerData({ db, fs, uid }) {
       await write((b) => b.set(r, { email, name, photoURL: photoURL ?? null, requestedAt: now() }));
     },
 
+    watchMyRequest: (cb, onError) => watchDoc(`access_requests/${uid}`, cb, onError),
     watchRequests: (cb, onError) => watchCol(col('access_requests'), cb, onError),
     watchMembers: (cb, onError) => watchCol(col('members'), cb, onError),
 

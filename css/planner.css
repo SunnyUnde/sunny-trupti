@@ -1,0 +1,55 @@
+/* Planner page. Tokens come from styles.css; nothing here hard-codes a colour. */
+body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
+
+.pl-header {
+  background: var(--maroon); color: var(--on-maroon);
+  padding: 16px 16px 12px; display: flex; flex-wrap: wrap;
+  align-items: center; justify-content: space-between; gap: 8px 12px;
+}
+.pl-names h1 { font-family: var(--font-display); font-size: 28px; font-weight: 600; line-height: 1.2; }
+.pl-names p { font-size: 18px; color: var(--on-maroon); }
+.pl-header .lang-switch { position: static; background: transparent; border-color: var(--on-maroon); }
+.pl-header .lang-switch button { min-height: 48px; min-width: 48px; font-size: 18px; color: var(--on-maroon); }
+.pl-header .lang-switch button[aria-pressed="true"] { background: var(--on-maroon); color: var(--maroon); }
+.pl-help {
+  flex-basis: 100%; display: flex; align-items: center; min-height: 48px;
+  color: var(--on-maroon); font-size: 18px; text-decoration: underline;
+}
+
+.pl-main { max-width: var(--max); margin: 0 auto; padding: 24px 16px 96px; }
+.pl-main section { padding: 0; text-align: left; }
+.gate {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 12px;
+  box-shadow: var(--card-shadow); padding: 28px 20px !important;
+  display: flex; flex-direction: column; gap: 16px; align-items: stretch; text-align: center;
+}
+#app h2 { font-family: var(--font-display); color: var(--maroon-ink); font-size: 30px; }
+
+.gate-msg { font-size: 20px; color: var(--text); }
+.gate-note, .gate-error { font-size: 18px; color: var(--muted); }
+.gate-error { color: var(--maroon-ink); }
+.gate-url {
+  min-height: 48px; font: inherit; font-size: 18px; padding: 8px 12px; width: 100%;
+  color: var(--text); background: var(--ivory); border: 1px solid var(--rule); border-radius: 8px;
+}
+.gate-url[hidden] { display: none; }
+
+.btn-main, .btn-quiet {
+  min-height: 48px; padding: 10px 22px; font: inherit; font-size: 18px; cursor: pointer; border-radius: 8px;
+}
+.btn-main { background: var(--maroon); color: var(--on-maroon); border: 1px solid var(--maroon); }
+.btn-main:disabled { opacity: .6; cursor: default; }
+.btn-quiet { background: transparent; color: var(--maroon-ink); border: 1px solid var(--rule); }
+.pl-header a:focus-visible, .btn-main:focus-visible, .btn-quiet:focus-visible,
+.pl-header button:focus-visible, .toast button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+#toast-region { position: fixed; left: 0; right: 0; bottom: 16px; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+.toast {
+  pointer-events: auto; display: flex; align-items: center; gap: 12px;
+  background: var(--maroon); color: var(--on-maroon); font-size: 18px;
+  padding: 8px 8px 8px 18px; border-radius: 12px; box-shadow: var(--page-shadow); max-width: var(--max);
+}
+.toast button {
+  min-height: 48px; min-width: 48px; padding: 0 16px; font: inherit; font-size: 18px; cursor: pointer;
+  background: var(--on-maroon); color: var(--maroon); border: 0; border-radius: 8px;
+}

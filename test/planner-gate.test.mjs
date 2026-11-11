@@ -1,0 +1,36 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+const { gateState } = await import('../js/planner/planner-gate.js');
+
+const CHROME = 'Mozilla/5.0 (Linux; Android 14) Chrome/120 Mobile Safari/537.36';
+const WA = 'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36 Instagram 300.0';
+const user = { uid: 'u1' };
+const member = { uid: 'u1', role: 'editor' };
+const request = { email: 'a@b.c' };
+
+test('in-app browser wins over everything', () => {
+  assert.equal(gateState({ ua: WA, user, member, request }), 'in_app_browser');
+  assert.equal(gateState({ ua: WA, user: null }), 'in_app_browser');
+});
+
+test('no user is signed_out', () => {
+  assert.equal(gateState({ ua: CHROME, user: null, member, request }), 'signed_out');
+});
+
+test('member doc means member, even with a stale request', () => {
+  assert.equal(gateState({ ua: CHROME, user, member, request }), 'member');
+});
+
+test('request without member is pending', () => {
+  assert.equal(gateState({ ua: CHROME, user, member: null, request }), 'pending');
+});
+
+test('no member and no request is no_access', () => {
+  assert.equal(gateState({ ua: CHROME, user, member: null, request: null }), 'no_access');
+});
+
+test('member removed mid-session returns no_access', () => {
+  assert.equal(gateState({ ua: CHROME, user, member, request: null }), 'member');
+  assert.equal(gateState({ ua: CHROME, user, member: null, request: null }), 'no_access');
+});

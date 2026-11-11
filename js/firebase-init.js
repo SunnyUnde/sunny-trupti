@@ -9,15 +9,15 @@ const [appMod, appCheckMod, authMod, fsMod] = await Promise.all([
   import(`${base}/firebase-firestore.js`),
 ]);
 
+const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+
 // Placeholders: the real project values arrive at go-live.
 const firebaseConfig = {
   apiKey: 'PLACEHOLDER',
   authDomain: 'sunnyandtrupti.com',
-  projectId: 'PLACEHOLDER',
+  projectId: isLocal ? 'demo-wedding' : 'PLACEHOLDER',
   appId: 'PLACEHOLDER',
 };
-
-const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
 
 export const app = appMod.initializeApp(firebaseConfig);
 export const auth = authMod.getAuth(app);

@@ -174,6 +174,15 @@ test('requestAccess twice does not fail; owner sees and declines it', async () =
   assert.equal(await raw('access_requests/guest'), null);
 });
 
+test('a requester watches only their own request', async () => {
+  const d = data('guest');
+  assert.equal(await first((cb, e) => d.watchMyRequest(cb, e)), null);
+  await d.requestAccess({ email: 'guest@example.com', name: 'guest', photoURL: null });
+  assert.equal((await first((cb, e) => d.watchMyRequest(cb, e))).email, 'guest@example.com');
+  assert.equal(await first((cb, e) => data('kaka').watchMyRequest(cb, e)), null);
+  await data('trupti').decline('guest');
+});
+
 test('owner watches members; a member watches itself', async () => {
   assert.deepEqual(ids(await first((cb, e) => data('trupti').watchMembers(cb, e))), ['aai', 'kaka', 'sunny', 'trupti']);
   const me = await first((cb, e) => data('aai').watchMember(cb, e));
