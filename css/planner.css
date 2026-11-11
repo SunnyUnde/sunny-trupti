@@ -104,3 +104,61 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 }
 .fv-filter-btn[aria-expanded="true"] { background: var(--ivory-2); border-color: var(--gold-ink); }
 .fv-filter-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Full mode. Red is for Full mode only. */
+:root { --red-bg: #fbe3e1; --red-ink: #8a1c14; --red-line: #c0392b; }
+@media (prefers-color-scheme: dark) {
+  :root { --red-bg: #3d1613; --red-ink: #f4a39b; --red-line: #e06a5e; }
+}
+.pf-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+.pf-toggle .fv-tab[aria-pressed="true"] { background: var(--maroon); color: var(--on-maroon); border-color: var(--maroon); }
+.pf-countdown { font-family: var(--font-display); font-size: 32px; color: var(--maroon-ink); }
+.pf-overdue { color: var(--red-ink); background: var(--red-bg); border-left: 4px solid var(--red-line); padding: 6px 10px; border-radius: 6px; }
+.pf-title {
+  align-self: flex-start; min-height: 48px; padding: 0; font: inherit; font-size: 20px; font-weight: 600;
+  text-align: left; color: var(--text); background: none; border: 0; cursor: pointer; text-decoration: underline;
+}
+.pf-pill {
+  align-self: flex-start; min-height: 48px; padding: 0 20px; font: inherit; font-size: 18px; cursor: pointer;
+  color: var(--maroon-ink); background: var(--ivory-2); border: 1px solid var(--gold-ink); border-radius: 24px;
+}
+.pf-pill-progress { background: var(--maroon); color: var(--on-maroon); border-color: var(--maroon); }
+.pf-title:focus-visible, .pf-pill:focus-visible, .pf-dialog button:focus-visible,
+.pf-dialog input:focus-visible, .pf-dialog select:focus-visible, .pf-dialog textarea:focus-visible,
+.pf-toggle .fv-tab:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+.pl-dialog {
+  width: min(100vw, var(--max)); max-width: 100vw; max-height: 100dvh; height: 100dvh; margin: 0 auto; padding: 0;
+  color: var(--text); background: var(--ivory); border: 0; overflow-y: auto; font-size: 18px;
+}
+.pl-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+.pl-dialog-head {
+  position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; background: var(--maroon); color: var(--on-maroon);
+}
+.pl-dialog-head h2 { font-family: var(--font-display); font-size: 24px; color: var(--on-maroon); overflow-wrap: anywhere; }
+.pl-dialog-head .btn-quiet { color: var(--on-maroon); border-color: var(--on-maroon); flex: none; }
+.pl-dialog-body { padding: 16px 16px 120px; display: flex; flex-direction: column; gap: 16px; }
+.pl-dialog form { display: flex; flex-direction: column; gap: 16px; }
+.toast-slot { position: fixed; left: 0; right: 0; bottom: 16px; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+.pf-field { display: flex; flex-direction: column; gap: 6px; }
+.pf-field label, .pf-sub { font-size: 18px; font-weight: 600; color: var(--maroon-ink); }
+.pf-field input, .pf-field select, .pf-field textarea, .pl-dialog textarea {
+  min-height: 48px; width: 100%; padding: 8px 12px; font: inherit; font-size: 18px;
+  color: var(--text); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+}
+.pf-actions, .pf-status, .pf-delete { display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-meta p, .pf-note, .pf-history { font-size: 18px; color: var(--text); }
+.pf-note { color: var(--muted); }
+.pf-error { font-size: 18px; color: var(--red-ink); }
+.pf-error:empty { display: none; }
+.pf-section { display: flex; flex-direction: column; gap: 10px; }
+.pf-list { display: flex; flex-direction: column; gap: 10px; }
+.pf-comment { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.pf-comment-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pf-comment-head img { border-radius: 50%; }
+.pf-stamp { font-size: 16px; color: var(--muted); }
+.pf-labels, .pf-newlabel { display: flex; flex-direction: column; gap: 10px; }
+.pf-danger { color: var(--red-ink); border-color: var(--red-line); }
+.pf-danger-fill { background: #8a1c14; border-color: #8a1c14; color: #fff; }
+.pl-dialog [hidden] { display: none !important; }

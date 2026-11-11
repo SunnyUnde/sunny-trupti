@@ -2,7 +2,9 @@
 let current = null;
 
 // The live region is in planner.html from load, so screen readers register it.
-const region = () => document.getElementById('toast-region');
+// A modal dialog sits above it, so an open dialog carries its own live slot.
+const region = () =>
+  [...document.querySelectorAll('dialog[open] .toast-slot')].pop() || document.getElementById('toast-region');
 
 const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
 
@@ -35,4 +37,35 @@ export function toast(msgEn, msgMr, { undo } = {}) {
   current = { box, dismiss };
   retranslate();
   return dismiss;
+}
+
+// A modal sheet with a title and a Close button. Fill `body`; `dlg` fires 'close'.
+export function openDialog(titleEn, titleMr) {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'pl-dialog';
+  const head = document.createElement('div');
+  head.className = 'pl-dialog-head';
+  const h = document.createElement('h2');
+  h.dataset.en = titleEn;
+  h.dataset.mr = titleMr;
+  h.textContent = titleEn;
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.className = 'btn-quiet';
+  x.dataset.en = 'Close';
+  x.dataset.mr = 'बंद करा';
+  x.textContent = 'Close';
+  x.onclick = () => dlg.close();
+  head.append(h, x);
+  const body = document.createElement('div');
+  body.className = 'pl-dialog-body';
+  const slot = document.createElement('div');
+  slot.className = 'toast-slot';
+  slot.setAttribute('aria-live', 'polite');
+  dlg.append(head, body, slot);
+  dlg.addEventListener('close', () => dlg.remove());
+  document.body.append(dlg);
+  dlg.showModal();
+  retranslate();
+  return { dlg, body, title: h, close: () => dlg.close() };
 }

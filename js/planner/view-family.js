@@ -10,7 +10,7 @@ const STATUS = {
   done: ['Done', 'झाले'],
 };
 const LOCALES = { en: 'en-IN', mr: 'mr-IN' };
-const mrDigits = (n) => String(n).replace(/\d/g, (d) => '०१२३४५६७८९'[d]);
+export const mrDigits = (n) => String(n).replace(/\d/g, (d) => '०१२३४५६७८९'[d]);
 
 export const statusWords = (status) => STATUS[status] || STATUS.todo;
 
@@ -97,16 +97,16 @@ export function taskRows(tasks, labels, selected, today) {
 }
 
 // ===== DOM =====
-const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
+export const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
 
-function el(tag, en, mr, cls) {
+export function el(tag, en, mr, cls) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
   if (en !== undefined) { n.textContent = en; n.dataset.en = en; n.dataset.mr = mr; }
   return n;
 }
-const text = (tag, s, cls) => { const n = el(tag, undefined, undefined, cls); n.textContent = s; return n; };
-const dual = (tag, enMr, cls) => el(tag, enMr[0], enMr[1], cls);
+export const text = (tag, s, cls) => { const n = el(tag, undefined, undefined, cls); n.textContent = s; return n; };
+export const dual = (tag, enMr, cls) => el(tag, enMr[0], enMr[1], cls);
 
 const NOTHING = ['Nothing here yet.', 'इथे अजून काही नाही.'];
 const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];

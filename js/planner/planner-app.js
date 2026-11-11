@@ -5,6 +5,7 @@ import { mountGate, helpUrl } from './planner-gate.js';
 import { todayIST, daysTo } from './planner-core.js';
 import { WEDDING_DATE } from './planner-config.js';
 import { mountFamily } from './view-family.js';
+import { mountFull } from './view-planner-full.js';
 import { toast } from './planner-ui.js';
 
 const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
@@ -18,24 +19,11 @@ function countdown() {
   node.dataset.mr = n === 0 ? 'आज लग्न आहे' : `लग्नाला ${mrDigits(n)} दिवस`;
 }
 
-function plannerPlaceholder() {
-  const h = document.createElement('h2');
-  const p = document.createElement('p');
-  h.dataset.en = 'Planner view';
-  h.dataset.mr = 'नियोजकाचे पान';
-  p.dataset.en = 'Coming soon.';
-  p.dataset.mr = 'लवकरच येत आहे.';
-  return [h, p];
-}
-
 let unmount = null;
 function showView(member, user) {
   if (unmount) { unmount(); unmount = null; }
-  if (member.role === 'reader') {
-    unmount = mountFamily(appEl, { member, user, data: createPlannerData({ db, fs, uid: user.uid }), toast });
-  } else {
-    appEl.replaceChildren(...plannerPlaceholder());
-  }
+  const ctx = { member, user, data: createPlannerData({ db, fs, uid: user.uid }), toast };
+  unmount = (member.role === 'reader' ? mountFamily : mountFull)(appEl, ctx);
   retranslate();
 }
 
