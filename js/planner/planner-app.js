@@ -4,6 +4,8 @@ import { createPlannerData } from './planner-data.js';
 import { mountGate, helpUrl } from './planner-gate.js';
 import { todayIST, daysTo } from './planner-core.js';
 import { WEDDING_DATE } from './planner-config.js';
+import { mountFamily } from './view-family.js';
+import { toast } from './planner-ui.js';
 
 const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
 const mrDigits = (n) => String(n).replace(/\d/g, (d) => '०१२३४५६७८९'[d]);
@@ -16,35 +18,47 @@ function countdown() {
   node.dataset.mr = n === 0 ? 'आज लग्न आहे' : `लग्नाला ${mrDigits(n)} दिवस`;
 }
 
-function viewFor(member) {
-  const family = member.role === 'reader';
+function plannerPlaceholder() {
   const h = document.createElement('h2');
   const p = document.createElement('p');
-  h.dataset.en = family ? 'Family view' : 'Planner view';
-  h.dataset.mr = family ? 'कुटुंबाचे पान' : 'नियोजकाचे पान';
+  h.dataset.en = 'Planner view';
+  h.dataset.mr = 'नियोजकाचे पान';
   p.dataset.en = 'Coming soon.';
   p.dataset.mr = 'लवकरच येत आहे.';
   return [h, p];
 }
 
+let unmount = null;
+function showView(member, user) {
+  if (unmount) { unmount(); unmount = null; }
+  if (member.role === 'reader') {
+    unmount = mountFamily(appEl, { member, user, data: createPlannerData({ db, fs, uid: user.uid }), toast });
+  } else {
+    appEl.replaceChildren(...plannerPlaceholder());
+  }
+  retranslate();
+}
+
+const appEl = document.getElementById('app');
 countdown();
 retranslate();
 document.getElementById('help-link').href = helpUrl();
 const gateEl = document.getElementById('gate');
-const appEl = document.getElementById('app');
 let shownRole = null;
 
 await mountGate(gateEl, {
   auth,
   authFns,
   data: (uid) => createPlannerData({ db, fs, uid }),
-  onState: (state, { member }) => {
-    if (state !== 'member') { appEl.hidden = true; shownRole = null; return; }
+  onState: (state, { user, member }) => {
+    if (state !== 'member') {
+      if (unmount) { unmount(); unmount = null; }
+      appEl.hidden = true; shownRole = null; return;
+    }
     appEl.hidden = false;
     if (shownRole !== member.role) {
       shownRole = member.role;
-      appEl.replaceChildren(...viewFor(member));
-      retranslate();
+      showView(member, user);
     }
   },
 });

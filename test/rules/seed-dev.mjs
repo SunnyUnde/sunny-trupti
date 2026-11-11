@@ -1,0 +1,76 @@
+// Seeds the 'demo-wedding' emulators (Firestore :8080, Auth :9099) for manual
+// walks. Re-runnable: it clears both first. Run: node test/rules/seed-dev.mjs
+// Sign in with the Google popup in the emulator, using the emails below.
+
+const PROJECT = 'demo-wedding';
+const FS = 'http://127.0.0.1:8080';
+const AUTH = 'http://127.0.0.1:9099';
+
+await fetch(`${FS}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`, { method: 'DELETE' });
+await fetch(`${AUTH}/emulator/v1/projects/${PROJECT}/accounts`, { method: 'DELETE' });
+
+// Writes bypass rules: the emulator treats this bearer token as admin.
+const admin = { Authorization: 'Bearer owner' };
+const put = async (path, data) => {
+  const fields = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, val(v)]));
+  const val = (v) =>
+    v === null ? { nullValue: null }
+    : typeof v === 'string' ? { stringValue: v }
+    : typeof v === 'number' ? { integerValue: String(v) }
+    : Array.isArray(v) ? { arrayValue: { values: v.map(val) } }
+    : v instanceof Date ? { timestampValue: v.toISOString() }
+    : { mapValue: { fields: fields(v) } };
+  const res = await fetch(`${FS}/v1/projects/${PROJECT}/databases/(default)/documents/${path}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', ...admin }, body: JSON.stringify({ fields: fields(data) }),
+  });
+  if (!res.ok) throw new Error(`${path}: ${res.status} ${await res.text()}`);
+};
+
+// Auth emulator users; the Google popup matches on email.
+const people = [
+  ['sunny', 'owner', 'groom'], ['trupti', 'owner', 'bride'], ['aai', 'editor', 'bride'], ['kaka', 'reader', null],
+];
+for (const [uid, role, side] of people) {
+  await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=x`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...admin },
+    body: JSON.stringify({ localId: uid, email: `${uid}@example.com`, password: 'password', displayName: uid }),
+  });
+  await put(`members/${uid}`, {
+    role, side, email: `${uid}@example.com`, name: uid, photoURL: null,
+    approvedAt: new Date('2026-11-11T00:00:00Z'), approvedBy: 'seed',
+  });
+}
+
+const DAY = ['Muhurt Karane', 'Kelvan', 'Haldi & Mehendi (23 Jan)', 'Sangeet (23 Jan)', 'Wedding day (24 Jan)', 'Gruhapravesh', 'Satyanarayan', 'After the wedding'];
+const CAT = ['Rituals', 'Venue', 'Food', 'Attire', 'Jewellery', 'Decor', 'Photo/Video', 'Guests', 'Travel & Stay', 'Invitations', 'Payments', 'Legal'];
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
+const labelId = (s) => `lbl-${slug(s)}`;
+for (const n of DAY) await put(`labels/${labelId(n)}`, { name: n, group: 'day', color: 'gold' });
+for (const n of CAT) await put(`labels/${labelId(n)}`, { name: n, group: 'category', color: 'maroon' });
+
+const L = (...names) => names.map(labelId);
+const tasks = [
+  ['t1', 'Book the photographer', '2026-11-05', 'sunny', 'Sunny', 'todo', L('Photo/Video'), 'everyone'], // overdue
+  ['t2', 'Order the invitations', '2026-11-20', 'trupti', 'Trupti', 'progress', L('Invitations', 'Wedding day (24 Jan)'), 'everyone'],
+  ['t3', 'Confirm the caterer menu', '2026-12-10', 'aai', 'Aai', 'done', L('Food', 'Kelvan'), 'everyone'],
+  ['t4', 'Shortlist jewellers', '2026-12-01', 'sunny', 'Sunny', 'todo', L('Jewellery'), 'planners'],
+  ['t5', 'Groom family outfits', '2026-12-15', 'sunny', 'Sunny', 'todo', L('Attire'), 'groom'],
+  ['t6', 'Bride family gift list', '2026-12-18', 'trupti', 'Trupti', 'progress', L('Guests'), 'bride'],
+];
+for (const [id, title, due, owner, ownerName, status, labels, visibility] of tasks) {
+  await put(`tasks/${id}`, {
+    title, due, owner, ownerName, status, labels, visibility, createdBy: 'seed',
+    createdAt: new Date('2026-11-11T00:00:00Z'), updatedAt: new Date('2026-11-11T00:00:00Z'),
+  });
+}
+
+const events = [
+  ['e1', '2027-01-23', '10:00 AM', 'Haldi', 'Laxmi Trimbak Mangal Karyalay', 'Bride family', 'everyone'],
+  ['e2', '2027-01-23', '7:00 PM', 'Sangeet', 'Laxmi Trimbak Mangal Karyalay', 'Both families', 'everyone'],
+  ['e3', '2027-01-24', '', 'Muhurt', 'Laxmi Trimbak Mangal Karyalay', '', 'everyone'],
+  ['e4', '2027-01-22', '5:00 PM', 'Planners dinner', 'Home', 'Sunny', 'planners'],
+];
+for (const [id, date, time, title, place, host, visibility] of events) {
+  await put(`events/${id}`, { date, time, title, place, host, note: '', visibility });
+}
+console.log('seeded: members sunny trupti aai kaka, 20 labels, 6 tasks, 4 events');
