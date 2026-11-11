@@ -162,3 +162,22 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .pf-danger { color: var(--red-ink); border-color: var(--red-line); }
 .pf-danger-fill { background: #8a1c14; border-color: #8a1c14; color: #fff; }
 .pl-dialog [hidden] { display: none !important; }
+
+/* Simple mode. Amber, never red. */
+.sp-hello { font-family: var(--font-display); font-size: 24px; color: var(--maroon-ink); margin-bottom: 12px; }
+.sp-badge { font-size: 20px; color: var(--maroon-ink); margin-bottom: 12px; }
+.sp-banner { display: block; width: 100%; margin-bottom: 16px; text-align: left; background: var(--amber-bg); color: var(--amber-ink); border-color: var(--amber-line); }
+.sp-stack { position: relative; padding-bottom: 20px; }
+.sp-card { position: relative; z-index: 3; min-height: 200px; background: var(--surface); user-select: none; }
+.sp-peek { position: absolute; left: 0; right: 0; top: 0; bottom: 0; min-height: 200px; }
+.sp-peek:nth-last-child(2) { transform: translateY(10px) scale(.97); z-index: 2; opacity: .8; }
+.sp-peek:nth-last-child(3) { transform: translateY(20px) scale(.94); z-index: 1; opacity: .6; }
+.sp-title { font-family: var(--font-display); font-size: 26px; color: var(--text); overflow-wrap: anywhere; }
+.sp-dots { display: flex; justify-content: center; gap: 8px; }
+.sp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); }
+.sp-dot-on { background: var(--maroon); }
+.sp-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.sp-actions .btn-main { flex-basis: 100%; min-height: 56px; font-size: 20px; }
+.sp-actions .btn-quiet { flex: 1; }
+.sp-banner:focus-visible, .sp-actions button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.sp-banner[hidden] { display: none; }

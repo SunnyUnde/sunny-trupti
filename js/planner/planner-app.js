@@ -2,13 +2,15 @@
 import { auth, db, fs, authFns } from '../firebase-init.js';
 import { createPlannerData } from './planner-data.js';
 import { mountGate, helpUrl } from './planner-gate.js';
-import { todayIST, daysTo } from './planner-core.js';
+import { todayIST, daysTo, viewMode } from './planner-core.js';
 import { WEDDING_DATE } from './planner-config.js';
 import { mountFamily } from './view-family.js';
 import { mountFull } from './view-planner-full.js';
+import { mountSimple } from './view-planner-simple.js';
 import { toast } from './planner-ui.js';
 
 const retranslate = () => window.I18n && window.I18n.set(window.I18n.getLang());
+const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];
 const mrDigits = (n) => String(n).replace(/\d/g, (d) => '०१२३४५६७८९'[d]);
 
 function countdown() {
@@ -20,11 +22,31 @@ function countdown() {
 }
 
 let unmount = null;
+const stop = () => { if (unmount) { unmount(); unmount = null; } };
+
+// The one place that decides which view to mount. Readers see Family; everyone else
+// follows prefs.mode, and a mode change (setMode) arrives here as a prefs snapshot.
 function showView(member, user) {
-  if (unmount) { unmount(); unmount = null; }
-  const ctx = { member, user, data: createPlannerData({ db, fs, uid: user.uid }), toast };
-  unmount = (member.role === 'reader' ? mountFamily : mountFull)(appEl, ctx);
-  retranslate();
+  stop();
+  const data = createPlannerData({ db, fs, uid: user.uid });
+  const ctx = { member, user, data, toast };
+  if (member.role === 'reader') {
+    unmount = mountFamily(appEl, ctx);
+    retranslate();
+    return;
+  }
+  ctx.switchMode = (mode) => data.setMode(mode).catch(() => toast(WRONG[0], WRONG[1]));
+  let mounted = null;
+  let unmountView = null;
+  const mountMode = (mode) => {
+    if (mode === mounted) return;
+    mounted = mode;
+    if (unmountView) unmountView();
+    unmountView = (mode === 'full' ? mountFull : mountSimple)(appEl, ctx);
+    retranslate();
+  };
+  const stopPrefs = data.watchPrefs((prefs) => mountMode(viewMode(prefs)), () => mountMode('simple'));
+  unmount = () => { stopPrefs(); if (unmountView) unmountView(); };
 }
 
 const appEl = document.getElementById('app');
@@ -40,7 +62,7 @@ await mountGate(gateEl, {
   data: (uid) => createPlannerData({ db, fs, uid }),
   onState: (state, { user, member }) => {
     if (state !== 'member') {
-      if (unmount) { unmount(); unmount = null; }
+      stop();
       appEl.hidden = true; shownRole = null; return;
     }
     appEl.hidden = false;

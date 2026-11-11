@@ -30,21 +30,35 @@ export const canSee = (item, member) => visibleSet(member).includes(item.visibil
 
 export const nextStatus = (s) => NEXT[s];
 
-export function thisWeek(tasks, member, today) {
+// Undone tasks this member owns, their side's family owns, or both own.
+const mineOpen = (tasks, member) => {
   const family = member.side ? `${member.side}_family` : null;
-  const mine = tasks.filter(
+  return tasks.filter(
     (t) => t.status !== 'done' && (t.owner === member.uid || t.owner === family || t.owner === 'both'),
   );
+};
+
+const byDueThenTitle = (a, b) => a.due.localeCompare(b.due) || a.title.localeCompare(b.title);
+
+export function thisWeek(tasks, member, today) {
+  const mine = mineOpen(tasks, member);
   const stack = mine
     .filter((t) => t.due >= today && daysTo(t.due, today) <= 7)
-    .sort(
-      (a, b) =>
-        (b.status === 'progress') - (a.status === 'progress') ||
-        a.due.localeCompare(b.due) ||
-        a.title.localeCompare(b.title),
-    );
+    .sort((a, b) => (b.status === 'progress') - (a.status === 'progress') || byDueThenTitle(a, b));
   return { stack, olderCount: mine.filter((t) => t.due < today).length, total: stack.length };
 }
+
+export const nextUp = (tasks, member, today) =>
+  mineOpen(tasks, member).filter((t) => t.due >= today).sort(byDueThenTitle)[0] || null;
+
+// No prefs doc, or any unknown mode, is Simple.
+export const viewMode = (prefs) => (prefs && prefs.mode === 'full' ? 'full' : 'simple');
+
+// Not now sends a card to the back, this session only; the oldest deferral comes back first.
+export const orderStack = (stack, deferred) => {
+  const later = deferred.map((id) => stack.find((t) => t.id === id)).filter(Boolean);
+  return [...stack.filter((t) => !deferred.includes(t.id)), ...later];
+};
 
 export const deadlineWindow = (due) =>
   (due && WINDOW_ENDS.find(([, end]) => due <= end)?.[0]) || 'w6';

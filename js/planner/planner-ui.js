@@ -1,4 +1,6 @@
 // Shared UI helpers for the planner.
+import { el } from './view-family.js';
+
 let current = null;
 
 // The live region is in planner.html from load, so screen readers register it.
@@ -68,4 +70,29 @@ export function openDialog(titleEn, titleMr) {
   dlg.showModal();
   retranslate();
   return { dlg, body, title: h, close: () => dlg.close() };
+}
+
+const pressedGroup = (choices, onPick) => {
+  const node = el('div', undefined, undefined, 'pf-toggle');
+  node.setAttribute('role', 'group');
+  const buttons = choices.map(([id, en, mr]) => {
+    const b = el('button', en, mr, 'fv-tab');
+    b.type = 'button';
+    b.onclick = () => onPick(id);
+    node.append(b);
+    return [id, b];
+  });
+  const set = (current) => { for (const [id, b] of buttons) b.setAttribute('aria-pressed', String(id === current)); };
+  return { node, set };
+};
+
+// Planner | Family, shared by Simple and Full. onPick(id) decides; set(id) shows it.
+export const viewToggle = (onPick) =>
+  pressedGroup([['planner', 'Planner', 'नियोजक'], ['family', 'Family', 'कुटुंब']], onPick);
+
+// Simple | Full, shared by both planner views. The caller persists and re-mounts.
+export function modeSwitch(current, onPick) {
+  const g = pressedGroup([['simple', 'Simple', 'सोपे'], ['full', 'Full', 'पूर्ण']], onPick);
+  g.set(current);
+  return g.node;
 }

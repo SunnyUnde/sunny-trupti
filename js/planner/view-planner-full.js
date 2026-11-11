@@ -8,6 +8,7 @@ import {
 } from './view-family.js';
 import { openTaskEditor, visibilityChoices, visibilityLabel } from './task-editor.js';
 import { openTaskDetail, statusMessage } from './task-detail.js';
+import { viewToggle, modeSwitch } from './planner-ui.js';
 
 // ===== PURE HELPERS =====
 export const WINDOWS = {
@@ -103,15 +104,7 @@ export function mountFull(root, ctx) {
   const stops = [];
   let stopFamily = null;
 
-  const toggle = el('div', undefined, undefined, 'pf-toggle');
-  toggle.setAttribute('role', 'group');
-  const modeButtons = [['planner', 'Planner', 'नियोजक'], ['family', 'Family', 'कुटुंब']].map(([id, en, mr]) => {
-    const b = el('button', en, mr, 'fv-tab');
-    b.type = 'button';
-    b.onclick = () => setMode(id);
-    toggle.append(b);
-    return [id, b];
-  });
+  const toggle = viewToggle(setMode);
   const tablist = el('div', undefined, undefined, 'fv-tabs');
   tablist.setAttribute('role', 'tablist');
   const tabButtons = [['home', 'Home', 'मुख्य'], ['tasks', 'Tasks', 'कामे']].map(([id, en, mr]) => {
@@ -133,7 +126,7 @@ export function mountFull(root, ctx) {
     if (stopFamily) { stopFamily(); stopFamily = null; }
     plannerBox.hidden = mode !== 'planner';
     familyBox.hidden = mode !== 'family';
-    for (const [id, b] of modeButtons) b.setAttribute('aria-pressed', String(id === mode));
+    toggle.set(mode);
     if (mode === 'family') stopFamily = mountFamily(familyBox, ctx);
     else render();
     retranslate();
@@ -282,7 +275,7 @@ export function mountFull(root, ctx) {
   stops.push(data.watchVendors(...watcher('vendors', (v) => { s.vendors = v; })));
   stops.push(data.watchBudget(...watcher('budget', (b) => { s.budget = b; })));
 
-  root.replaceChildren(toggle, plannerBox, familyBox);
+  root.replaceChildren(modeSwitch('full', ctx.switchMode), toggle.node, plannerBox, familyBox);
   setMode('planner');
 
   return () => {

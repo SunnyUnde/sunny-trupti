@@ -109,3 +109,21 @@ test('daysTo', () => {
   assert.equal(daysTo('2026-11-15', '2026-11-15'), 0);
   assert.equal(daysTo('2027-03-29', '2027-03-28'), 1);
 });
+
+test('nextUp, viewMode and orderStack', async () => {
+  const { nextUp, viewMode, orderStack, thisWeek } = await import('../js/planner/planner-core.js');
+  const m = { uid: 'aai', side: 'bride' };
+  const t = (id, o) => ({ id, title: id, due: '2026-12-01', status: 'todo', owner: 'aai', ...o });
+  const tasks = [t('far', { due: '2026-12-20' }), t('near', { due: '2026-12-05' }), t('old', { due: '2026-11-01' }),
+    t('theirs', { owner: 'sunny', due: '2026-11-12' }), t('fin', { status: 'done', due: '2026-11-12' })];
+  assert.equal(nextUp(tasks, m, '2026-11-11').id, 'near');
+  assert.equal(nextUp([t('old', { due: '2026-11-01' })], m, '2026-11-11'), null);
+  assert.equal(thisWeek(tasks, m, '2026-11-11').olderCount, 1);
+  assert.equal(viewMode(null), 'simple');
+  assert.equal(viewMode({ mode: 'simple' }), 'simple');
+  assert.equal(viewMode({ mode: 'full' }), 'full');
+  const stack = [t('a'), t('b'), t('c')];
+  assert.deepEqual(orderStack(stack, []).map((x) => x.id), ['a', 'b', 'c']);
+  assert.deepEqual(orderStack(stack, ['a', 'c']).map((x) => x.id), ['b', 'a', 'c']);
+  assert.deepEqual(orderStack(stack, ['gone', 'a']).map((x) => x.id), ['b', 'c', 'a']);
+});

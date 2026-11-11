@@ -119,7 +119,7 @@ const TABS = [
 
 const dateHeading = (date) => el('h3', formatDate(date, 'en'), formatDate(date, 'mr'), 'fv-date');
 
-function renderSchedule(events) {
+export function renderSchedule(events) {
   const wrap = el('div', undefined, undefined, 'fv-stack');
   const days = groupEventsByDate(events);
   if (!days.length) return dual('p', NOTHING, 'fv-empty');
