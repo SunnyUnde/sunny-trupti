@@ -25,8 +25,88 @@ service cloud.firestore {
     }
 
     // ===== PLANNER =====
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // members/{uid}: owner docs come only from the console. An owner approves
+    // (creates), changes role, or removes readers and editors of their own side.
+    match /members/{uid} {
+      function memberKeys() {
+        return ['role', 'side', 'email', 'name', 'photoURL', 'approvedAt', 'approvedBy'];
+      }
+      function requestDoc() {
+        return /databases/$(database)/documents/access_requests/$(uid);
+      }
+      // reader with no side, or editor on the caller's (owner's) side.
+      function grantable(d) {
+        return (d.role == 'reader' && d.side == null)
+          || (d.role == 'editor' && d.side in ['groom', 'bride'] && d.side == sideOf());
+      }
+      function validApproval() {
+        let d = request.resource.data;
+        return exists(requestDoc())
+          && d.keys().hasOnly(memberKeys())
+          && d.keys().hasAll(memberKeys())
+          && grantable(d)
+          && d.email == get(requestDoc()).data.email
+          && d.name == get(requestDoc()).data.name
+          && (d.photoURL == null || d.photoURL is string)
+          && d.approvedAt is timestamp
+          && d.approvedBy == request.auth.uid;
+      }
+      // Promotion reader -> editor (onto the caller's side) by any owner;
+      // editor of side S -> reader, or editor kept, only by the owner of side S.
+      function validChange() {
+        let d = request.resource.data;
+        let o = resource.data;
+        let touched = d.diff(o).affectedKeys();
+        return touched.hasOnly(['role', 'side', 'approvedAt', 'approvedBy'])
+          && (o.role == 'reader' || (o.role == 'editor' && o.side == sideOf()))
+          && grantable(d)
+          && (!touched.hasAny(['approvedAt']) || d.approvedAt is timestamp)
+          && (!touched.hasAny(['approvedBy']) || d.approvedBy == request.auth.uid);
+      }
+      function removable() {
+        return resource.data.role == 'reader'
+          || (resource.data.role == 'editor' && resource.data.side == sideOf());
+      }
+
+      allow get: if isSelf(uid) || isOwner();
+      allow list: if isOwner();
+      allow create: if isOwner() && validApproval();
+      allow update: if isOwner() && validChange();
+      allow delete: if isOwner() && removable();
+    }
+
+    // access_requests/{uid}: a non-member asks for access as themselves.
+    match /access_requests/{uid} {
+      function validRequest() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['email', 'name', 'photoURL', 'requestedAt'])
+          && d.email == request.auth.token.email
+          && d.name == request.auth.token.name
+          && (d.get('photoURL', null) == null || d.photoURL is string)
+          && d.requestedAt is timestamp;
+      }
+
+      allow get: if isSelf(uid) || isOwner();
+      allow list: if isOwner();
+      allow create: if isSelf(uid)
+        && !exists(/databases/$(database)/documents/members/$(uid))
+        && validRequest();
+      allow delete: if isSelf(uid) || isOwner();
+    }
+
+    // prefs/{uid}: a member's own view mode.
+    match /prefs/{uid} {
+      allow read, delete: if isSelf(uid) && isMember();
+      allow create, update: if isSelf(uid) && isMember()
+        && request.resource.data.keys().hasOnly(['mode'])
+        && request.resource.data.mode in ['simple', 'full'];
+    }
+
     // Denied until the planner rules land.
-    match /members/{uid} { allow read, write: if false; }
     match /tasks/{id} { allow read, write: if false; }
 
     // ===== REGISTRY =====
