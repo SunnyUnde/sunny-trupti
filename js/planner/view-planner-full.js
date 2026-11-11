@@ -103,14 +103,13 @@ function toggleList(list, v) {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 }
 
-export function mountFull(root, ctx) {
+export function mountFull(root, ctx, startTab = 'home') {
   const { member, data, toast } = ctx;
   const s = {
     tasks: null, labels: [], events: null, vendors: null, budget: null, failed: {}, loaded: {},
-    requests: [], members: [], mode: 'planner', tab: ctx.startTab || 'home', filterOpen: false,
+    requests: [], members: [], mode: 'planner', tab: startTab, filterOpen: false,
     f: { statuses: [], owners: [], visibilities: [], day: [], category: [] },
   };
-  delete ctx.startTab;
   const owner = member.role === 'owner';
   const stops = [];
   let stopFamily = null;
@@ -286,7 +285,7 @@ export function mountFull(root, ctx) {
       access[1].dataset.mr = n ? `प्रवेश (${mrDigits(n)})` : 'प्रवेश';
       access[1].textContent = access[1].dataset.en;
     }
-    const needs = NEEDS[s.tab];
+    const needs = s.tab === 'vendors' && owner ? [...NEEDS.vendors, 'members'] : NEEDS[s.tab];
     let body;
     if (needs.some((w) => s.failed[w])) body = dual('p', WRONG, 'fv-empty');
     else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty');

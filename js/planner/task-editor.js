@@ -35,7 +35,7 @@ export function ownerChoices(member, members, current) {
     if (m.role !== 'reader' && m.uid !== member.uid) choices.push({ value: m.uid, name: m.name, en: m.name, mr: m.name });
   }
   if (current && !choices.some((c) => c.value === current.owner)) {
-    choices.push({ value: current.owner, name: current.ownerName, en: current.ownerName, mr: current.ownerName });
+    choices.push({ value: current.owner, name: current.ownerName, en: current.en ?? current.ownerName, mr: current.mr ?? current.ownerName });
   }
   return choices;
 }

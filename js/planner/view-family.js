@@ -51,6 +51,15 @@ export function groupEventsByDate(events) {
   }));
 }
 
+export const dayLabelOf = (labels, eventId) =>
+  labels.find((l) => l.group === 'day' && l.eventId === eventId) || null;
+
+// The tasks (already limited to what the caller can see) carrying the event's day label.
+export function tasksForEvent(tasks, labels, eventId) {
+  const label = dayLabelOf(labels, eventId);
+  return label ? tasks.filter((t) => (t.labels || []).includes(label.id)) : [];
+}
+
 // A missed due date is not done and before today.
 export const isWaiting = (task, today) => task.status !== 'done' && !!task.due && task.due < today;
 
@@ -119,7 +128,7 @@ const TABS = [
 
 const dateHeading = (date) => el('h3', formatDate(date, 'en'), formatDate(date, 'mr'), 'fv-date');
 
-export function renderSchedule(events) {
+export function renderSchedule(events, labels = [], tasks = []) {
   const wrap = el('div', undefined, undefined, 'fv-stack');
   const days = groupEventsByDate(events);
   if (!days.length) return dual('p', NOTHING, 'fv-empty');
@@ -138,11 +147,25 @@ export function renderSchedule(events) {
         p.append(el('span', 'Host: ', 'यजमान: '), text('span', e.host));
         card.append(p);
       }
+      const linked = tasksForEvent(tasks, labels, e.id);
+      if (linked.length) card.append(taskDisclosure(linked));
       group.append(card);
     }
     wrap.append(group);
   }
   return wrap;
+}
+
+function taskDisclosure(linked) {
+  const box = document.createElement('details');
+  box.className = 'fv-linked';
+  box.append(el('summary', `Tasks for this day (${linked.length})`, `या दिवसाची कामे (${mrDigits(linked.length)})`));
+  for (const t of linked) {
+    const row = el('p', undefined, undefined, 'fv-line');
+    row.append(text('strong', t.title), el('span', ` · ${statusWords(t.status)[0]}`, ` · ${statusWords(t.status)[1]}`));
+    box.append(row);
+  }
+  return box;
 }
 
 function chipRow(labels, group, selected, onToggle) {
@@ -263,7 +286,7 @@ export function mountFamily(root, ctx) {
     if (tabFailed(s.tab, s.failed)) body = dual('p', WRONG, 'fv-empty');
     else if (s.tab === 'venue') body = renderVenue();
     else if ((s.tab === 'schedule' ? s.events : s.tasks) === null) body = dual('p', LOADING, 'fv-empty');
-    else if (s.tab === 'schedule') body = renderSchedule(s.events);
+    else if (s.tab === 'schedule') body = renderSchedule(s.events, s.labels, s.tasks || []);
     else body = renderProgress(s.tasks, s.labels, s.selected, s.filterOpen, toggle, () => { s.filterOpen = !s.filterOpen; render(); });
     panel.replaceChildren(body);
     retranslate();

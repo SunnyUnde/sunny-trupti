@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const ev = await import('../js/planner/view-events.js');
+const fam = await import('../js/planner/view-family.js');
 const vend = await import('../js/planner/view-vendors.js');
 const acc = await import('../js/planner/view-access.js');
 
@@ -14,16 +15,16 @@ const LAB = [
 ];
 
 test('day label helpers see only day labels and ignore unknown ids', () => {
-  assert.equal(ev.dayLabelOf(LAB, 'e1').id, 'd1');
-  assert.equal(ev.dayLabelOf(LAB, 'nope'), null);
+  assert.equal(fam.dayLabelOf(LAB, 'e1').id, 'd1');
+  assert.equal(fam.dayLabelOf(LAB, 'nope'), null);
   assert.deepEqual(ev.linkableLabels(LAB, 'e1').map((l) => l.id), ['d1', 'd2']);
   assert.deepEqual(ev.linkableLabels(LAB, null).map((l) => l.id), ['d2']);
 });
 
 test('tasksForEvent lists the visible tasks that carry the linked label', () => {
   const tasks = [{ id: 'a', labels: ['d1'] }, { id: 'b', labels: ['c1'] }, { id: 'c' }];
-  assert.deepEqual(ev.tasksForEvent(tasks, LAB, 'e1').map((t) => t.id), ['a']);
-  assert.deepEqual(ev.tasksForEvent(tasks, LAB, 'e2'), []);
+  assert.deepEqual(fam.tasksForEvent(tasks, LAB, 'e1').map((t) => t.id), ['a']);
+  assert.deepEqual(fam.tasksForEvent(tasks, LAB, 'e2'), []);
 });
 
 test('linkOps unlinks the old label and links the new one, only for everyone events', () => {
@@ -52,7 +53,7 @@ test('persistEvent creates once, then links labels with the new id', async () =>
   const data = {
     addEvent: async (f) => { calls.push(['add', f.title]); return 'new1'; },
     updateEvent: async (id) => { calls.push(['upd', id]); },
-    updateLabel: async (id, p) => { calls.push(['lab', id, p.eventId]); },
+    setLabelEvent: async (id, eventId) => { calls.push(['lab', id, eventId]); },
   };
   const draft = { ...ev.eventDraft(null, LAB), title: 'Dinner', date: '2027-01-22', labelId: 'd2' };
   const state = {};
@@ -76,8 +77,10 @@ test('amounts parse as whole non-negative rupees', () => {
 test('vendor draft, build and validation', () => {
   const d = vend.vendorDraft({ category: 'Food', name: ' Caterer ', contact: '99', status: 'booked', quote: 1000, paid: 250, owner: 'both', notes: '' });
   assert.equal(d.quote, '1000');
-  assert.deepEqual(vend.buildVendor({ ...d, quote: '2,000', paid: '' }), {
-    category: 'Food', name: 'Caterer', contact: '99', status: 'booked', quote: 2000, paid: 0, owner: 'both', notes: '',
+  const choices = [{ value: 'both', name: 'Both families' }];
+  assert.deepEqual(vend.buildVendor({ ...d, quote: '2,000', paid: '' }, choices), {
+    category: 'Food', name: 'Caterer', contact: '99', status: 'booked', quote: 2000, paid: 0, owner: 'both',
+    ownerName: 'Both families', notes: '',
   });
   assert.equal(vend.vendorDraft(null).status, 'to_find');
   assert.equal(vend.vendorError({ ...d, name: ' ' }), 'name');
@@ -93,12 +96,15 @@ test('budgetFigures: total, quoted, paid, left; unset total has no left', () => 
   assert.equal(vend.budgetFigures([], { total: 100 }).left, 100);
 });
 
-test('vendorOwner names a member, a family or both; unknown is null', () => {
-  const me = { uid: 'u1', name: 'Sunny', role: 'owner' };
-  assert.equal(vend.vendorOwner('u1', me, []).en, 'Sunny');
-  assert.equal(vend.vendorOwner('both', me, []).en, 'Both families');
-  assert.equal(vend.vendorOwner('u2', me, [{ uid: 'u2', name: 'Aai', role: 'editor' }]).en, 'Aai');
-  assert.equal(vend.vendorOwner('u3', me, []), null);
+test('vendorOwnerLabel uses the copied name, else the bilingual fallback', () => {
+  assert.deepEqual(vend.vendorOwnerLabel({ ownerName: 'Aai' }), { en: 'Aai', mr: 'Aai' });
+  assert.deepEqual(vend.vendorOwnerLabel({}), { en: 'A planner', mr: 'एक नियोजक' });
+});
+
+test('ownerChoices fallback carries en and mr', async () => {
+  const { ownerChoices } = await import('../js/planner/task-editor.js');
+  const c = ownerChoices({ uid: 'u1', name: 'S' }, [], { owner: 'u9', ownerName: '', en: 'A planner', mr: 'एक नियोजक' });
+  assert.deepEqual(c.at(-1), { value: 'u9', name: '', en: 'A planner', mr: 'एक नियोजक' });
 });
 
 // ===== ACCESS =====

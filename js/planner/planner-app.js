@@ -35,10 +35,11 @@ function showView(member, user) {
     retranslate();
     return;
   }
-  // The tab to open is read once by mountFull when the prefs snapshot re-mounts the view.
+  // The tab to open in Full, handed to mountFull when the prefs snapshot re-mounts the view.
+  let startTab;
   ctx.switchMode = (mode, tab) => {
-    ctx.startTab = tab;
-    return data.setMode(mode).catch(() => { delete ctx.startTab; toast(WRONG[0], WRONG[1]); });
+    startTab = tab;
+    return data.setMode(mode).catch(() => toast(WRONG[0], WRONG[1]));
   };
   let mounted = null;
   let unmountView = null;
@@ -46,7 +47,8 @@ function showView(member, user) {
     if (mode === mounted) return;
     mounted = mode;
     if (unmountView) unmountView();
-    unmountView = (mode === 'full' ? mountFull : mountSimple)(appEl, ctx);
+    unmountView = mode === 'full' ? mountFull(appEl, ctx, startTab) : mountSimple(appEl, ctx);
+    startTab = undefined;
     retranslate();
   };
   const stopPrefs = data.watchPrefs((prefs) => mountMode(viewMode(prefs)), () => { appEl.replaceChildren(el('p', WRONG[0], WRONG[1], 'fv-empty')); retranslate(); });

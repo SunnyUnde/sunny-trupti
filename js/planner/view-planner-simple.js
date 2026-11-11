@@ -34,7 +34,7 @@ export const requestsLine = (n) => ({
 // ===== DOM =====
 const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];
 const LOADING = ['Loading', 'लोड होत आहे'];
-const NEEDS = { today: ['tasks', 'labels'], schedule: ['events'], add: [] };
+const NEEDS = { today: ['tasks', 'labels'], schedule: ['events', 'tasks', 'labels'], add: [] };
 
 export function mountSimple(root, ctx) {
   const { member, user, data, toast } = ctx;
@@ -201,7 +201,7 @@ export function mountSimple(root, ctx) {
     if (needs.some((w) => s.failed[w])) body = dual('p', WRONG, 'fv-empty');
     else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty');
     else if (s.tab === 'today') body = renderToday(todayIST(new Date()));
-    else if (s.tab === 'schedule') body = renderSchedule(s.events);
+    else if (s.tab === 'schedule') body = renderSchedule(s.events, s.labels, s.tasks);
     else body = renderAdd();
     panel.replaceChildren(body);
     retranslate();

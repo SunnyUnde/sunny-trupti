@@ -225,6 +225,13 @@ test('updateEvent off everyone clears label eventId', async () => {
   assert.equal(l.group, 'day');
 });
 
+test('setLabelEvent links a label, and null removes the field', async () => {
+  await data('trupti').setLabelEvent('l1', 'ev_all');
+  assert.equal((await raw('labels/l1')).eventId, 'ev_all');
+  await data('trupti').setLabelEvent('l1', null);
+  assert.equal('eventId' in (await raw('labels/l1')), false);
+});
+
 test('deleteEvent clears label eventId; addEvent creates', async () => {
   const d = data('trupti');
   const id = await d.addEvent({ title: 'Haldi', date: '2027-01-21', visibility: 'bride' });

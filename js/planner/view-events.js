@@ -2,21 +2,12 @@
 // Pure helpers first, DOM after.
 import { visibilityChoices, visibilityLabel, field, select } from './task-editor.js';
 import { openDialog } from './planner-ui.js';
-import { groupEventsByDate, statusWords, formatDate, el, text, dual, retranslate } from './view-family.js';
+import { dayLabelOf, tasksForEvent, groupEventsByDate, statusWords, formatDate, el, text, dual, retranslate } from './view-family.js';
 
 // ===== PURE HELPERS =====
-export const dayLabelOf = (labels, eventId) =>
-  labels.find((l) => l.group === 'day' && l.eventId === eventId) || null;
-
 // Day labels that are free, or already point at this event.
 export const linkableLabels = (labels, eventId) =>
   labels.filter((l) => l.group === 'day' && (!l.eventId || l.eventId === eventId));
-
-// The tasks (already limited to what the caller can see) carrying the event's day label.
-export function tasksForEvent(tasks, labels, eventId) {
-  const label = dayLabelOf(labels, eventId);
-  return label ? tasks.filter((t) => (t.labels || []).includes(label.id)) : [];
-}
 
 // [labelId, eventId or null] writes. Only 'everyone' events may be linked; a hidden
 // event is unlinked by the data layer, so there is nothing to do here.
@@ -49,7 +40,7 @@ export async function persistEvent(data, event, draft, labels, state) {
   if (id) await data.updateEvent(id, fields);
   else state.id = await data.addEvent(fields);
   const ops = linkOps({ eventId: state.id ?? id, visibility: draft.visibility, labels, chosen: draft.labelId });
-  for (const [labelId, eventId] of ops) await data.updateLabel(labelId, { eventId });
+  for (const [labelId, eventId] of ops) await data.setLabelEvent(labelId, eventId);
 }
 
 // ===== DOM =====

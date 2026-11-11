@@ -67,6 +67,16 @@ const button = (en, mr, cls, onClick) => {
 
 export function createAccess(ctx, rerender) {
   const { member, data, toast } = ctx;
+  // A button with the owner's side beneath it: where an Editor would join.
+  const withSideHint = (btn, id) => {
+    const hint = joinsSide(member.side);
+    const note = el('p', hint.en, hint.mr, 'pf-note');
+    note.id = id;
+    btn.setAttribute('aria-describedby', id);
+    const box = el('div', undefined, undefined, 'pa-editor');
+    box.append(btn, note);
+    return box;
+  };
   let sub = 'requested';
   let confirm = null; // { uid, action }
   const wrong = () => toast(WRONG[0], WRONG[1]);
@@ -81,20 +91,26 @@ export function createAccess(ctx, rerender) {
     card.append(person(r));
     const when = requestedWhen(r.requestedAt);
     if (when) card.append(el('p', `Asked ${when.en}`, `विनंती ${when.mr}`, 'pf-stamp'));
-    const hint = joinsSide(member.side);
-    const hintId = `hint-${r.id}`;
     const asEditor = button('Approve as Editor', 'संपादक म्हणून मान्य करा', 'btn-main', () => approve(r, 'editor'));
-    asEditor.setAttribute('aria-describedby', hintId);
-    const note = el('p', hint.en, hint.mr, 'pf-note');
-    note.id = hintId;
-    const editorBox = el('div', undefined, undefined, 'pa-editor');
-    editorBox.append(asEditor, note);
+    if (confirm && confirm.uid === r.id) {
+      const yes = button('Yes, decline', 'होय, नाकारा', 'btn-main pf-danger-fill', () => {
+        yes.disabled = true;
+        data.decline(r.id).then(() => { confirm = null; toast('Request declined.', 'विनंती नाकारली.'); },
+          () => { yes.disabled = false; wrong(); });
+      });
+      const box = el('div', undefined, undefined, 'pf-actions');
+      box.append(
+        el('p', `Decline ${r.name}'s request?`, `${r.name} यांची विनंती नाकारायची?`, 'pf-sub'), yes,
+        button('Keep it', 'ठेवा', 'btn-quiet', () => { confirm = null; rerender(); }),
+      );
+      card.append(box);
+      return card;
+    }
     const actions = el('div', undefined, undefined, 'pf-actions');
     actions.append(
       button('Approve as Reader', 'वाचक म्हणून मान्य करा', 'btn-main', () => approve(r, 'reader')),
-      editorBox,
-      button('Decline', 'नाकारा', 'btn-quiet', () => data.decline(r.id).then(
-        () => toast('Request declined.', 'विनंती नाकारली.'), wrong)),
+      withSideHint(asEditor, `hint-${r.id}`),
+      button('Decline', 'नाकारा', 'btn-quiet', () => { confirm = { uid: r.id, action: 'decline' }; rerender(); }),
     );
     card.append(actions);
     return card;
@@ -113,15 +129,17 @@ export function createAccess(ctx, rerender) {
     if (m.side) tags.append(el('span', SIDE[m.side][0], SIDE[m.side][1], 'fv-tag'));
     card.append(tags);
     const actions = el('div', undefined, undefined, 'pf-actions');
-    const done = (en, mr) => () => { confirm = null; toast(en, mr); };
-    const run = (fn, en, mr) => fn().then(done(en, mr), wrong);
+    const run = (yes, fn, en, mr) => fn().then(
+      () => { confirm = null; toast(en, mr); },
+      () => { yes.disabled = false; wrong(); },
+    );
     for (const a of allowedActions(member, m)) {
       if (confirm && confirm.uid === m.id && confirm.action === a) {
         const c = ACTION_COPY[a];
         const yes = button(c[4], c[5], 'btn-main pf-danger-fill', () => {
           yes.disabled = true;
-          if (a === 'remove') run(() => data.removeMember(m.id), `${m.name} removed.`, `${m.name} काढून टाकले.`);
-          else run(() => data.setRole(m.id, 'reader'), `${m.name} is now a Reader.`, `${m.name} आता वाचक आहेत.`);
+          if (a === 'remove') run(yes, () => data.removeMember(m.id), `${m.name} removed.`, `${m.name} काढून टाकले.`);
+          else run(yes, () => data.setRole(m.id, 'reader'), `${m.name} is now a Reader.`, `${m.name} आता वाचक आहेत.`);
         });
         actions.append(
           el('p', c[2].replace('{n}', m.name), c[3].replace('{n}', m.name), 'pf-sub'), yes,
@@ -129,8 +147,9 @@ export function createAccess(ctx, rerender) {
         );
       } else if (!confirm || confirm.uid !== m.id) {
         if (a === 'promote') {
-          actions.append(button('Make Editor', 'संपादक करा', 'btn-main', () => data.setRole(m.id, 'editor').then(
-            () => toast(`${m.name} is now an Editor.`, `${m.name} आता संपादक आहेत.`), wrong)));
+          const make = button('Make Editor', 'संपादक करा', 'btn-main', () => data.setRole(m.id, 'editor').then(
+            () => toast(`${m.name} is now an Editor.`, `${m.name} आता संपादक आहेत.`), wrong));
+          actions.append(withSideHint(make, `side-${m.id}`));
         } else {
           actions.append(button(ACTION_COPY[a][0], ACTION_COPY[a][1], 'btn-quiet pf-danger', () => { confirm = { uid: m.id, action: a }; rerender(); }));
         }

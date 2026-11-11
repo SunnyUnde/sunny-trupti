@@ -36,8 +36,9 @@ export function createPlannerData({ db, fs, uid }) {
   // Labels may only point at 'everyone' events, so unlink them first-hand.
   const unlinkLabels = async (eventId) => {
     const snap = await fs.getDocs(fs.query(col('labels'), fs.where('eventId', '==', eventId)));
-    for (const d of snap.docs) await update(`labels/${d.id}`, { eventId: fs.deleteField() });
+    for (const d of snap.docs) await setLabelEvent(d.id, null);
   };
+  const setLabelEvent = (id, eventId) => update(`labels/${id}`, { eventId: eventId ?? fs.deleteField() });
 
   return {
     // ===== MEMBERS AND ACCESS =====
@@ -137,6 +138,8 @@ export function createPlannerData({ db, fs, uid }) {
     watchLabels: (cb, onError) => watchCol(col('labels'), cb, onError),
     addLabel: (data) => create('labels', data),
     updateLabel: (id, patch) => update(`labels/${id}`, patch),
+    // Links a day label to an event, or unlinks it with null.
+    setLabelEvent,
 
     // Strips the label from every task the caller can see, then deletes it.
     async deleteLabel(id) {

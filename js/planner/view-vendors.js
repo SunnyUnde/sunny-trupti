@@ -7,6 +7,7 @@ import { openDialog } from './planner-ui.js';
 import { el, text, dual, mrDigits, retranslate } from './view-family.js';
 
 // ===== PURE HELPERS =====
+const OTHER = ['A planner', 'एक नियोजक'];
 export const VENDOR_STATUS = {
   to_find: ['To find', 'शोधायचा आहे'],
   shortlisted: ['Shortlisted', 'निवडक यादीत'],
@@ -32,9 +33,10 @@ export const vendorDraft = (v) => v
 export const vendorError = (d) =>
   !d.name.trim() ? 'name' : amountOrZero(d.quote) === null ? 'quote' : amountOrZero(d.paid) === null ? 'paid' : null;
 
-export const buildVendor = (d) => ({
+export const buildVendor = (d, choices) => ({
   category: d.category.trim(), name: d.name.trim(), contact: d.contact.trim(), status: d.status,
-  quote: amountOrZero(d.quote), paid: amountOrZero(d.paid), owner: d.owner, notes: d.notes.trim(),
+  quote: amountOrZero(d.quote), paid: amountOrZero(d.paid), owner: d.owner,
+  ownerName: choices.find((c) => c.value === d.owner).name, notes: d.notes.trim(),
 });
 
 export function budgetFigures(vendors, budget) {
@@ -43,20 +45,12 @@ export function budgetFigures(vendors, budget) {
   return { total, quoted: sum('quote'), paid: sum('paid'), left: total === null ? null : total - sum('paid') };
 }
 
-// {en, mr} for a vendor's owner, or null when it is a member this planner cannot name.
-export function vendorOwner(owner, member, members) {
-  const c = ownerChoices(member, members, null).find((x) => x.value === owner);
-  return c ? { en: c.en, mr: c.mr } : null;
-}
+// The owner name copied at write time; older vendors without one read "A planner".
+export const vendorOwnerLabel = (v) => (v.ownerName ? { en: v.ownerName, mr: v.ownerName } : { en: OTHER[0], mr: OTHER[1] });
 
 // ===== DOM =====
 const WRONG = ['Something went wrong. Please try again.', 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'];
 const NOTHING = ['No vendors yet.', 'अजून विक्रेते नाहीत.'];
-const OTHER = ['A planner', 'एक नियोजक'];
-const COLUMNS = [
-  ['Category', 'प्रकार'], ['Name', 'नाव'], ['Contact', 'संपर्क'], ['Status', 'स्थिती'],
-  ['Quote', 'अंदाजित रक्कम'], ['Paid', 'दिलेले'], ['Owner', 'जबाबदार'],
-];
 
 function openVendorEditor(ctx, vendor, members) {
   const { member, data, toast } = ctx;
@@ -80,8 +74,9 @@ function openVendorEditor(ctx, vendor, members) {
   notes.rows = 3;
   notes.value = draft.notes;
   notes.oninput = () => { draft.notes = notes.value; };
-  const owners = ownerChoices(member, members, vendor && !vendorOwner(vendor.owner, member, members)
-    ? { owner: vendor.owner, ownerName: OTHER[0] } : null);
+  const owners = ownerChoices(member, members, vendor
+    ? { owner: vendor.owner, ownerName: vendor.ownerName || '', en: vendor.ownerName || OTHER[0], mr: vendor.ownerName || OTHER[1] }
+    : null);
   const statuses = Object.entries(VENDOR_STATUS).map(([value, [en, mr]]) => ({ value, en, mr }));
 
   const submit = el('button', 'Save', 'जतन करा', 'btn-main');
@@ -111,7 +106,7 @@ function openVendorEditor(ctx, vendor, members) {
       return;
     }
     submit.disabled = true;
-    const fields = buildVendor(draft);
+    const fields = buildVendor(draft, owners);
     await (vendor ? data.updateVendor(vendor.id, fields) : data.addVendor(fields)).then(() => {
       dlg.close();
       toast(vendor ? 'Vendor saved.' : 'Vendor added.', vendor ? 'विक्रेता जतन केला.' : 'विक्रेता जोडला.');
@@ -152,7 +147,7 @@ function openVendorEditor(ctx, vendor, members) {
   retranslate();
 }
 
-const rupees = (n) => el('span', formatRupees(n), formatRupees(n).replace(/\d/g, (d) => mrDigits(d)));
+const rupees = (n) => el('span', formatRupees(n), mrDigits(formatRupees(n)));
 
 // The budget draft lives here so a snapshot re-render never wipes what is being typed.
 export function createVendors(ctx, rerender) {
@@ -172,7 +167,7 @@ export function createVendors(ctx, rerender) {
 
   function summary(f) {
     const cards = el('div', undefined, undefined, 'pv-cards');
-    for (const [en, mr, v] of [['Total', 'एकूण', f.total], ['Quoted', 'अंदाजित', f.quoted], ['Paid', 'दिलेले', f.paid], ['Left', 'शिल्लक', f.left]]) {
+    for (const [en, mr, v] of [['Total', 'एकूण', f.total], ['Quoted', 'अंदाजित', f.quoted], ['Paid', 'दिलेले', f.paid], ['Left to spend', 'खर्च करायचे बाकी', f.left]]) {
       const c = el('article', undefined, undefined, 'fv-card');
       c.append(el('h4', en, mr), v === null ? el('p', 'Not set', 'ठरवले नाही', 'fv-line') : rupees(v));
       cards.append(c);
@@ -180,32 +175,24 @@ export function createVendors(ctx, rerender) {
     return cards;
   }
 
-  function table(vendors, members) {
-    const box = el('div', undefined, undefined, 'pv-scroll');
-    box.tabIndex = 0;
-    const t = document.createElement('table');
-    t.className = 'pv-table';
-    const head = t.createTHead().insertRow();
-    for (const [en, mr] of COLUMNS) head.append(el('th', en, mr));
-    const tb = t.createTBody();
-    const sorted = [...vendors].sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
-    for (const v of sorted) {
-      const row = tb.insertRow();
-      const name = text('button', v.name, 'pf-title');
-      name.type = 'button';
-      name.onclick = () => openVendorEditor(ctx, v, members);
-      const owner = vendorOwner(v.owner, ctx.member, members) || { en: OTHER[0], mr: OTHER[1] };
-      const [sen, smr] = VENDOR_STATUS[v.status];
-      row.insertCell().textContent = v.category || '';
-      row.insertCell().append(name);
-      row.insertCell().textContent = v.contact || '';
-      row.insertCell().append(el('span', sen, smr));
-      row.insertCell().append(rupees(v.quote || 0));
-      row.insertCell().append(rupees(v.paid || 0));
-      row.insertCell().append(el('span', owner.en, owner.mr));
-    }
-    box.append(t);
-    return box;
+  function vendorCard(v, members) {
+    const card = el('article', undefined, undefined, 'fv-card');
+    const name = text('button', v.name, 'pf-title');
+    name.type = 'button';
+    name.onclick = () => openVendorEditor(ctx, v, members);
+    const tags = el('p', undefined, undefined, 'fv-tags');
+    if (v.category) tags.append(text('span', v.category, 'fv-tag'));
+    tags.append(el('span', VENDOR_STATUS[v.status][0], VENDOR_STATUS[v.status][1], 'fv-tag'));
+    const q = formatRupees(v.quote || 0);
+    const p = formatRupees(v.paid || 0);
+    const owner = vendorOwnerLabel(v);
+    card.append(
+      name, tags,
+      el('p', `Quote ${q} · Paid ${p}`, `अंदाजित रक्कम ${mrDigits(q)} · दिलेले ${mrDigits(p)}`, 'fv-line'),
+      el('p', owner.en, owner.mr, 'fv-line'),
+    );
+    if (v.contact) card.append(text('p', v.contact, 'fv-line'));
+    return card;
   }
 
   return {
@@ -234,7 +221,9 @@ export function createVendors(ctx, rerender) {
       add.type = 'button';
       add.onclick = () => openVendorEditor(ctx, null, members);
       wrap.append(add);
-      wrap.append(vendors.length ? table(vendors, members) : dual('p', NOTHING, 'fv-empty'));
+      const sorted = [...vendors].sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
+      if (!sorted.length) wrap.append(dual('p', NOTHING, 'fv-empty'));
+      for (const v of sorted) wrap.append(vendorCard(v, members));
       return wrap;
     },
   };

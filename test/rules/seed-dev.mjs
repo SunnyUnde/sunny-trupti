@@ -81,8 +81,9 @@ const vendors = [
   ['v2', 'Photo/Video', 'Frame Story', '98220 00002', 'shortlisted', 180000, 0, 'sunny'],
   ['v3', 'Food', 'Shree Caterers', '98220 00003', 'to_find', 0, 0, 'bride_family'],
 ];
+const ownerNames = { both: 'Both families', sunny: 'Sunny', bride_family: "Bride's family" };
 for (const [id, category, name, contact, status, quote, paid, owner] of vendors) {
-  await put(`vendors/${id}`, { category, name, contact, status, quote, paid, owner, notes: '' });
+  await put(`vendors/${id}`, { category, name, contact, status, quote, paid, owner, ownerName: ownerNames[owner], notes: '' });
 }
 // Pending requests, as Google users would write them.
 for (const [uid, name] of [['mama', 'Mama'], ['mavshi', 'Mavshi']]) {
