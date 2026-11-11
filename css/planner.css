@@ -1,3 +1,6 @@
+/* hidden always wins over component display rules. */
+[hidden] { display: none !important; }
+
 /* Planner page. Tokens come from styles.css; nothing here hard-codes a colour. */
 body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 
@@ -37,7 +40,6 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
   min-height: 48px; font: inherit; font-size: 18px; padding: 8px 12px; width: 100%;
   color: var(--text); background: var(--ivory); border: 1px solid var(--rule); border-radius: 8px;
 }
-.gate-url[hidden] { display: none; }
 
 .btn-main, .btn-quiet {
   min-height: 48px; padding: 10px 22px; font: inherit; font-size: 18px; cursor: pointer; border-radius: 8px;
@@ -102,7 +104,6 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .fv-chip[aria-pressed="true"] { background: var(--maroon); color: var(--on-maroon); border-color: var(--maroon); }
 .fv-map { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; margin-top: 8px; }
 .fv-tab:focus-visible, .fv-chip:focus-visible, .fv-map:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.gate[hidden] { display: none; }
 .fv-filter-btn {
   align-self: flex-start; min-height: 48px; padding: 0 22px; font: inherit; font-size: 18px; cursor: pointer;
   color: var(--maroon-ink); background: transparent; border: 1px solid var(--rule); border-radius: 24px;
@@ -166,7 +167,6 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .pf-labels, .pf-newlabel { display: flex; flex-direction: column; gap: 10px; }
 .pf-danger { color: var(--red-ink); border-color: var(--red-line); }
 .pf-danger-fill { background: #8a1c14; border-color: #8a1c14; color: #fff; }
-.pl-dialog [hidden] { display: none !important; }
 
 /* Simple mode. Amber, never red. */
 .sp-hello { font-family: var(--font-display); font-size: 24px; color: var(--maroon-ink); margin-bottom: 12px; }
@@ -185,7 +185,6 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .sp-actions .btn-main { flex-basis: 100%; min-height: 56px; font-size: 20px; }
 .sp-actions .btn-quiet { flex: 1; }
 .sp-banner:focus-visible, .sp-actions button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.sp-banner[hidden] { display: none; }
 .sp-modelink { display: inline-flex; align-items: center; min-height: 48px; margin-top: 12px; padding: 0; font: inherit; font-size: 18px; color: var(--maroon-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
 .sp-modelink:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
