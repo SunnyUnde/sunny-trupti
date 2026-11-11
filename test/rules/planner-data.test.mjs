@@ -49,14 +49,15 @@ beforeEach(async () => {
 
 const data = (uid, fs = npmFs) => createPlannerData({ db: dbs[uid], fs, uid });
 
-// Resolves with the first snapshot that satisfies `ok`, then unsubscribes.
-// A client's first snapshot can come from its local cache alone.
-const first = (watch, ok = () => true) => new Promise((resolve) => {
+// Resolves with the first snapshot that satisfies `ok`, then unsubscribes;
+// rejects on a listener error. A client's first snapshot can come from its
+// local cache alone, so waits after a write match the expected server state.
+const first = (watch, ok = () => true) => new Promise((resolve, reject) => {
   const unsub = watch((v) => {
     if (!ok(v)) return;
     Promise.resolve().then(() => unsub());
     resolve(v);
-  });
+  }, reject);
 });
 
 const raw = async (path) => {
@@ -79,22 +80,22 @@ const ids = (list) => list.map((x) => x.id).sort();
 test('family preview uses reader queries', async () => {
   const calls = [];
   const spyFs = { ...npmFs, where: (...a) => { calls.push(a); return npmFs.where(...a); } };
-  const list = await first((cb) => data('aai', spyFs).watchTasks(MEMBERS.aai, { family: true }, cb));
+  const list = await first((cb, e) => data('aai', spyFs).watchTasks(MEMBERS.aai, { family: true }, cb, e));
   assert.deepEqual(ids(list), ['t_all']);
   assert.deepEqual(calls, [['visibility', '==', 'everyone']]);
 });
 
 test('planner and reader task watches return their visible sets', async () => {
-  const mine = await first((cb) => data('aai').watchTasks(MEMBERS.aai, { family: false }, cb));
+  const mine = await first((cb, e) => data('aai').watchTasks(MEMBERS.aai, { family: false }, cb, e));
   assert.deepEqual(ids(mine), ['t_all', 't_b', 't_pl']);
-  const read = await first((cb) => data('kaka').watchTasks(MEMBERS.kaka, { family: false }, cb));
+  const read = await first((cb, e) => data('kaka').watchTasks(MEMBERS.kaka, { family: false }, cb, e));
   assert.deepEqual(ids(read), ['t_all']);
 });
 
 test('event watches filter by visibility', async () => {
   await seed(env, 'events/ev_g', { title: 'Haldi', date: '2027-01-21', visibility: 'groom' });
-  assert.deepEqual(ids(await first((cb) => data('kaka').watchEvents(MEMBERS.kaka, {}, cb))), ['ev_all']);
-  assert.deepEqual(ids(await first((cb) => data('sunny').watchEvents(MEMBERS.sunny, {}, cb))), ['ev_all', 'ev_g']);
+  assert.deepEqual(ids(await first((cb, e) => data('kaka').watchEvents(MEMBERS.kaka, {}, cb, e))), ['ev_all']);
+  assert.deepEqual(ids(await first((cb, e) => data('sunny').watchEvents(MEMBERS.sunny, {}, cb, e))), ['ev_all', 'ev_g']);
 });
 
 test('undo appends history', async () => {
@@ -102,7 +103,7 @@ test('undo appends history', async () => {
   await d.setStatus('t_b', 'todo', 'done');
   await d.setStatus('t_b', 'done', 'todo');
   assert.equal((await raw('tasks/t_b')).status, 'todo');
-  const hist = await first((cb) => d.watchHistory('t_b', cb));
+  const hist = await first((cb, e) => d.watchHistory('t_b', cb, e), (h) => h.length === 2);
   assert.deepEqual(hist.map(({ from, to, by }) => ({ from, to, by })), [
     { from: 'todo', to: 'done', by: 'aai' },
     { from: 'done', to: 'todo', by: 'aai' },
@@ -148,22 +149,36 @@ test('approve as reader has no side; setRole promotes onto approver side and bac
   assert.equal(await raw('members/guest'), null);
 });
 
+test('a denied watch calls onError with permission-denied', async () => {
+  const asPlanner = { role: 'editor', side: 'bride' };
+  const err = await new Promise((resolve) => {
+    data('kaka').watchTasks(asPlanner, { family: false }, () => resolve(null), resolve);
+  });
+  assert.equal(err?.code, 'permission-denied');
+  await assert.rejects(first((cb, e) => data('kaka').watchVendors(cb, e)), { code: 'permission-denied' });
+});
+
+test('approve when the request is gone rejects with request_gone', async () => {
+  await assert.rejects(data('trupti').approve('guest', 'editor'), { message: 'request_gone' });
+  assert.equal(await raw('members/guest'), null);
+});
+
 test('requestAccess twice does not fail; owner sees and declines it', async () => {
   const d = data('guest');
   const req = { email: 'guest@example.com', name: 'guest', photoURL: null };
   await d.requestAccess(req);
   await d.requestAccess(req);
   assert.equal((await raw('access_requests/guest')).email, 'guest@example.com');
-  assert.deepEqual(ids(await first((cb) => data('trupti').watchRequests(cb))), ['guest']);
+  assert.deepEqual(ids(await first((cb, e) => data('trupti').watchRequests(cb, e))), ['guest']);
   await data('trupti').decline('guest');
   assert.equal(await raw('access_requests/guest'), null);
 });
 
 test('owner watches members; a member watches itself', async () => {
-  assert.deepEqual(ids(await first((cb) => data('trupti').watchMembers(cb))), ['aai', 'kaka', 'sunny', 'trupti']);
-  const me = await first((cb) => data('aai').watchMember(cb));
+  assert.deepEqual(ids(await first((cb, e) => data('trupti').watchMembers(cb, e))), ['aai', 'kaka', 'sunny', 'trupti']);
+  const me = await first((cb, e) => data('aai').watchMember(cb, e));
   assert.deepEqual([me.uid, me.role, me.side], ['aai', 'editor', 'bride']);
-  assert.equal(await first((cb) => data('guest').watchMember(cb)), null);
+  assert.equal(await first((cb, e) => data('guest').watchMember(cb, e)), null);
 });
 
 test('deleteTask leaves no docs', async () => {
@@ -185,9 +200,9 @@ test('add and update a task; notes and comments round trip', async () => {
   const t = await raw(`tasks/${id}`);
   assert.deepEqual([t.title, t.createdBy, t.ownerName], ['Book caterer', 'aai', 'Aai']);
   await d.saveNotes(id, 'call at 5');
-  assert.equal((await first((cb) => d.watchNotes(id, cb))).text, 'call at 5');
+  assert.equal((await first((cb, e) => d.watchNotes(id, cb, e), (n) => n?.text === 'call at 5')).text, 'call at 5');
   await d.addComment(id, 'done?');
-  const [c] = await first((cb) => d.watchComments(id, cb));
+  const [c] = await first((cb, e) => d.watchComments(id, cb, e), (l) => l.length === 1);
   assert.deepEqual([c.text, c.by], ['done?', 'aai']);
   await data('trupti').deleteComment(id, c.id);
   assert.deepEqual(await raw(`tasks/${id}/comments`), []);
@@ -214,14 +229,14 @@ test('labels, vendors, budget and prefs', async () => {
   const d = data('aai');
   const lid = await d.addLabel({ name: 'Food', group: 'category', color: '#00f' });
   await d.updateLabel(lid, { eventId: 'ev_all' });
-  assert.deepEqual(ids(await first((cb) => d.watchLabels(cb), (l) => l.length === 2)), [lid, 'l1'].sort());
+  assert.deepEqual(ids(await first((cb, e) => d.watchLabels(cb, e), (l) => l.length === 2)), [lid, 'l1'].sort());
   const vid = await d.addVendor({ name: 'Annapurna', status: 'to_find' });
   await d.updateVendor(vid, { status: 'booked' });
-  assert.equal((await first((cb) => d.watchVendors(cb)))[0].status, 'booked');
+  assert.equal((await first((cb, e) => d.watchVendors(cb, e), (l) => l[0]?.status === 'booked'))[0].status, 'booked');
   await d.deleteVendor(vid);
   assert.equal(await raw(`vendors/${vid}`), null);
   await d.setBudget(900000);
-  assert.equal((await first((cb) => d.watchBudget(cb))).total, 900000);
+  assert.equal((await first((cb, e) => d.watchBudget(cb, e), (b) => b?.total === 900000)).total, 900000);
   await d.setMode('simple');
-  assert.equal((await first((cb) => d.watchPrefs(cb))).mode, 'simple');
+  assert.equal((await first((cb, e) => d.watchPrefs(cb, e), (p) => p?.mode === 'simple')).mode, 'simple');
 });

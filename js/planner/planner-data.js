@@ -8,9 +8,10 @@ export function createPlannerData({ db, fs, uid }) {
   const ref = (path) => fs.doc(db, path);
   const col = (path) => fs.collection(db, path);
   const rows = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  const watchDoc = (path, cb) =>
-    fs.onSnapshot(ref(path), (s) => cb(s.exists() ? s.data() : null));
-  const watchCol = (q, cb) => fs.onSnapshot(q, (s) => cb(rows(s)));
+  // Every watch takes an optional onError, e.g. for a rules denial.
+  const watchDoc = (path, cb, onError) =>
+    fs.onSnapshot(ref(path), (s) => cb(s.exists() ? s.data() : null), onError);
+  const watchCol = (q, cb, onError) => fs.onSnapshot(q, (s) => cb(rows(s)), onError);
   const write = (fn) => { const b = fs.writeBatch(db); fn(b); return b.commit(); };
   const now = () => fs.serverTimestamp();
 
@@ -40,8 +41,8 @@ export function createPlannerData({ db, fs, uid }) {
 
   return {
     // ===== MEMBERS AND ACCESS =====
-    watchMember: (cb) => fs.onSnapshot(ref(`members/${uid}`),
-      (s) => cb(s.exists() ? { uid, ...s.data() } : null)),
+    watchMember: (cb, onError) => fs.onSnapshot(ref(`members/${uid}`),
+      (s) => cb(s.exists() ? { uid, ...s.data() } : null), onError),
 
     async requestAccess({ email, name, photoURL }) {
       const r = ref(`access_requests/${uid}`);
@@ -49,22 +50,27 @@ export function createPlannerData({ db, fs, uid }) {
       await write((b) => b.set(r, { email, name, photoURL: photoURL ?? null, requestedAt: now() }));
     },
 
-    watchRequests: (cb) => watchCol(col('access_requests'), cb),
-    watchMembers: (cb) => watchCol(col('members'), cb),
+    watchRequests: (cb, onError) => watchCol(col('access_requests'), cb, onError),
+    watchMembers: (cb, onError) => watchCol(col('members'), cb, onError),
 
     async approve(target, role) {
-      const req = (await fs.getDoc(ref(`access_requests/${target}`))).data();
+      const reqRef = ref(`access_requests/${target}`);
+      const snap = await fs.getDoc(reqRef);
+      if (!snap.exists()) throw new Error('request_gone');
+      const req = snap.data();
       const side = role === 'editor' ? await mySide() : null;
-      await write((b) => b.set(ref(`members/${target}`), {
-        role,
-        side,
-        email: req.email,
-        name: req.name,
-        photoURL: req.photoURL ?? null,
-        approvedAt: now(),
-        approvedBy: uid,
-      }));
-      await remove(`access_requests/${target}`);
+      await write((b) => {
+        b.set(ref(`members/${target}`), {
+          role,
+          side,
+          email: req.email,
+          name: req.name,
+          photoURL: req.photoURL ?? null,
+          approvedAt: now(),
+          approvedBy: uid,
+        });
+        b.delete(reqRef);
+      });
     },
 
     decline: (target) => remove(`access_requests/${target}`),
@@ -76,7 +82,8 @@ export function createPlannerData({ db, fs, uid }) {
     removeMember: (target) => remove(`members/${target}`),
 
     // ===== TASKS =====
-    watchTasks: (member, { family } = {}, cb) => watchCol(visibleQuery('tasks', member, family), cb),
+    watchTasks: (member, { family } = {}, cb, onError) =>
+      watchCol(visibleQuery('tasks', member, family), cb, onError),
 
     addTask: (data) => create('tasks', { ...data, createdBy: uid, createdAt: now(), updatedAt: now() }),
 
@@ -97,17 +104,20 @@ export function createPlannerData({ db, fs, uid }) {
       b.set(fs.doc(col(`tasks/${id}/history`)), { from, to, by: uid, at: now() });
     }),
 
-    watchNotes: (id, cb) => watchDoc(`tasks/${id}/private/notes`, cb),
+    watchNotes: (id, cb, onError) => watchDoc(`tasks/${id}/private/notes`, cb, onError),
     saveNotes: (id, text) => write((b) => b.set(ref(`tasks/${id}/private/notes`), { text })),
 
-    watchComments: (id, cb) => watchCol(fs.query(col(`tasks/${id}/comments`), fs.orderBy('at')), cb),
+    watchComments: (id, cb, onError) =>
+      watchCol(fs.query(col(`tasks/${id}/comments`), fs.orderBy('at')), cb, onError),
     addComment: (id, text) => create(`tasks/${id}/comments`, { text, by: uid, at: now() }),
     deleteComment: (id, cid) => remove(`tasks/${id}/comments/${cid}`),
 
-    watchHistory: (id, cb) => watchCol(fs.query(col(`tasks/${id}/history`), fs.orderBy('at')), cb),
+    watchHistory: (id, cb, onError) =>
+      watchCol(fs.query(col(`tasks/${id}/history`), fs.orderBy('at')), cb, onError),
 
     // ===== EVENTS =====
-    watchEvents: (member, { family } = {}, cb) => watchCol(visibleQuery('events', member, family), cb),
+    watchEvents: (member, { family } = {}, cb, onError) =>
+      watchCol(visibleQuery('events', member, family), cb, onError),
     addEvent: (data) => create('events', data),
 
     async updateEvent(id, patch) {
@@ -116,12 +126,12 @@ export function createPlannerData({ db, fs, uid }) {
     },
 
     async deleteEvent(id) {
-      await remove(`events/${id}`);
       await unlinkLabels(id);
+      await remove(`events/${id}`);
     },
 
     // ===== LABELS =====
-    watchLabels: (cb) => watchCol(col('labels'), cb),
+    watchLabels: (cb, onError) => watchCol(col('labels'), cb, onError),
     addLabel: (data) => create('labels', data),
     updateLabel: (id, patch) => update(`labels/${id}`, patch),
 
@@ -139,15 +149,15 @@ export function createPlannerData({ db, fs, uid }) {
     },
 
     // ===== VENDORS, BUDGET, PREFS =====
-    watchVendors: (cb) => watchCol(col('vendors'), cb),
+    watchVendors: (cb, onError) => watchCol(col('vendors'), cb, onError),
     addVendor: (data) => create('vendors', data),
     updateVendor: (id, patch) => update(`vendors/${id}`, patch),
     deleteVendor: (id) => remove(`vendors/${id}`),
 
-    watchBudget: (cb) => watchDoc('settings/budget', cb),
+    watchBudget: (cb, onError) => watchDoc('settings/budget', cb, onError),
     setBudget: (total) => write((b) => b.set(ref('settings/budget'), { total })),
 
-    watchPrefs: (cb) => watchDoc(`prefs/${uid}`, cb),
+    watchPrefs: (cb, onError) => watchDoc(`prefs/${uid}`, cb, onError),
     setMode: (mode) => write((b) => b.set(ref(`prefs/${uid}`), { mode })),
   };
 }
