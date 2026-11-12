@@ -285,7 +285,7 @@ export function mountFamily(root, ctx) {
     let body;
     if (tabFailed(s.tab, s.failed)) body = dual('p', WRONG, 'fv-empty');
     else if (s.tab === 'venue') body = renderVenue();
-    else if ((s.tab === 'schedule' ? s.events : s.tasks) === null) body = dual('p', LOADING, 'fv-empty');
+    else if ((s.tab === 'schedule' ? s.events : s.tasks) === null) body = dual('p', LOADING, 'fv-empty pl-loading');
     else if (s.tab === 'schedule') body = renderSchedule(s.events, s.labels, s.tasks || []);
     else body = renderProgress(s.tasks, s.labels, s.selected, s.filterOpen, toggle, () => { s.filterOpen = !s.filterOpen; render(); });
     panel.replaceChildren(body);

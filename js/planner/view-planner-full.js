@@ -288,7 +288,7 @@ export function mountFull(root, ctx, startTab = 'home') {
     const needs = s.tab === 'vendors' && owner ? [...NEEDS.vendors, 'members'] : NEEDS[s.tab];
     let body;
     if (needs.some((w) => s.failed[w])) body = dual('p', WRONG, 'fv-empty');
-    else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty');
+    else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty pl-loading');
     else body = renderTab(todayIST(new Date()));
     panel.replaceChildren(body);
     retranslate();

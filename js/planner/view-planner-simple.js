@@ -199,7 +199,7 @@ export function mountSimple(root, ctx) {
     const needs = NEEDS[s.tab];
     let body;
     if (needs.some((w) => s.failed[w])) body = dual('p', WRONG, 'fv-empty');
-    else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty');
+    else if (needs.some((w) => !s.loaded[w])) body = dual('p', LOADING, 'fv-empty pl-loading');
     else if (s.tab === 'today') body = renderToday(todayIST(new Date()));
     else if (s.tab === 'schedule') body = renderSchedule(s.events, s.labels, s.tasks);
     else body = renderAdd();

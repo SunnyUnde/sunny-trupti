@@ -233,7 +233,7 @@ export function openTaskEditor(ctx, task) {
 
   // The form shows only once labels (and notes, when editing) have loaded, so a
   // save can never overwrite them with blanks.
-  const loading = dual('p', ['Loading', 'लोड होत आहे'], 'pf-note');
+  const loading = dual('p', ['Loading', 'लोड होत आहे'], 'pf-note pl-loading');
   body.append(err, loading);
   const show = () => { if (ready.labels && ready.notes) { loading.replaceWith(form); title.focus(); } };
   stops.push(data.watchLabels((l) => { s.labels = l; ready.labels = true; renderLabels(); show(); }, showWrong));

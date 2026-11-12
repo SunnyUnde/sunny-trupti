@@ -86,7 +86,7 @@ export function mountGate(root, { auth, authFns, data, onState = () => {}, ua = 
 
   function view(state) {
     const body = gateBody({ state, authKnown: s.authKnown, ready: s.ready, error: s.error });
-    if (body === 'loading') return [el('p', 'loading')];
+    if (body === 'loading') return [el('p', 'loading', { className: 'pl-loading' })];
     if (body === 'error') return [...errorLine(), signOutBtn()];
     if (body === 'in_app_browser') return inApp();
     if (body === 'signed_out') return signedOut();

@@ -202,3 +202,50 @@ body.planner { font-size: 18px; font-weight: 400; min-height: 100vh; }
 .fv-linked { margin-top: 6px; }
 .fv-linked summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-size: 18px; color: var(--maroon-ink); }
 .fv-linked summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ===== Loading ===== One elegant gold sweep-ring, shared by every loading state.
+   The "Loading" word stays as the accessible label; the ring is decorative. */
+.pl-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 28px 0;
+  font-family: var(--font-display); font-size: 22px; letter-spacing: .06em; color: var(--muted);
+}
+/* Devanagari conjuncts and matras break under letter-spacing (see styles.css). */
+html[lang="mr"] .pl-loading { letter-spacing: normal; }
+.pl-loading::before {
+  content: ""; width: 46px; height: 46px; border-radius: 50%;
+  background: conic-gradient(from 90deg, transparent 0deg, var(--gold) 300deg, var(--gold-ink) 360deg);
+  -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 calc(100% - 3px));
+          mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 calc(100% - 3px));
+  animation: pl-spin .85s linear infinite;
+}
+@keyframes pl-spin { to { transform: rotate(1turn); } }
+
+/* ===== Interaction polish ===== Every control answers to hover and press. */
+.btn-main, .btn-quiet, .fv-tab, .fv-chip, .pf-pill, .fv-filter-btn, .sp-modelink,
+.pl-help, .pl-signout, .pf-title, .lang-switch button, .fv-map {
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease,
+              box-shadow .2s ease, filter .15s ease, transform .08s ease;
+}
+.fv-card { transition: transform .18s ease, box-shadow .18s ease; }
+@media (hover: hover) {
+  .btn-main:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 6px 18px rgba(122, 31, 43, .28); }
+  .btn-quiet:hover, .fv-filter-btn:hover, .pf-pill:hover { border-color: var(--gold-ink); background: var(--ivory-2); }
+  .fv-tab:hover:not([aria-selected="true"]):not([aria-pressed="true"]),
+  .fv-chip:hover:not([aria-pressed="true"]) { border-color: var(--gold-ink); color: var(--maroon-ink); }
+  .fv-card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(122, 31, 43, .12); }
+  .pl-header .lang-switch button:hover:not([aria-pressed="true"]) { background: rgba(247, 233, 208, .16); }
+}
+.btn-main:active:not(:disabled), .btn-quiet:active, .fv-tab:active,
+.fv-chip:active, .pf-pill:active, .fv-filter-btn:active { transform: translateY(1px); }
+
+/* The gate card drifts up once as the page settles. */
+.gate { animation: pl-rise .45s ease both; }
+@keyframes pl-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-loading::before { animation-duration: 1.6s; }
+  .gate { animation: none; }
+  .btn-main:active, .btn-quiet:active, .fv-tab:active, .fv-chip:active,
+  .pf-pill:active, .fv-filter-btn:active, .fv-card:hover { transform: none; }
+}
