@@ -11,12 +11,12 @@ const [appMod, appCheckMod, authMod, fsMod] = await Promise.all([
 
 const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
 
-// Placeholders: the real project values arrive at go-live.
+// Web config is public by design: security rules, not these values, guard the data.
 const firebaseConfig = {
-  apiKey: 'PLACEHOLDER',
+  apiKey: 'AIzaSyBl94KszbYaQF4RgBcSbaV9_6WJZv-XggY',
   authDomain: 'sunnyandtrupti.com',
-  projectId: isLocal ? 'demo-wedding' : 'PLACEHOLDER',
-  appId: 'PLACEHOLDER',
+  projectId: isLocal ? 'demo-wedding' : 'sunnyandtrupti',
+  appId: '1:810840998149:web:74bfb8bebe373b44def76c',
 };
 
 export const app = appMod.initializeApp(firebaseConfig);
@@ -28,7 +28,7 @@ if (isLocal) {
   authMod.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
 } else {
   appCheckMod.initializeAppCheck(app, {
-    provider: new appCheckMod.ReCaptchaV3Provider('PLACEHOLDER_RECAPTCHA_SITE_KEY'),
+    provider: new appCheckMod.ReCaptchaEnterpriseProvider('6LfLohwuAAAAAEEav9jGlH2zQXB_Cy2nsYlpMX0h'),
     isTokenAutoRefreshEnabled: true,
   });
 }

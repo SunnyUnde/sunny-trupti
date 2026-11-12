@@ -77,22 +77,24 @@ only the `@font-face` blocks whose subset comment you want, download each
 on the Firebase Spark plan, and security rules in `firestore.rules` are the only
 enforcement. Day-to-day use needs no setup; these steps are one-time.
 
-1. **Firebase project** (personal Gmail): create the project, enable
+1. **Firebase project** (personal Gmail, project id `sunnyandtrupti`): enable
    Authentication with the Google provider, add `sunnyandtrupti.com` to the
-   authorised domains, create a Firestore database, and register App Check with
-   a reCAPTCHA v3 key (start in monitoring mode). Put the web config into
-   `js/firebase-init.js` and the site key into its App Check call, and set
-   `HELP_WHATSAPP` in `js/planner/planner-config.js`.
+   authorised domains, and create a Firestore database. Create a score based
+   reCAPTCHA key for `sunnyandtrupti.com` in the same Cloud project and register
+   it in App Check under **Fraud Defense** (classic reCAPTCHA is deprecated there),
+   leaving enforcement off. `js/firebase-init.js` holds the web config and that
+   site key (`ReCaptchaEnterpriseProvider`); set `HELP_WHATSAPP` in
+   `js/planner/planner-config.js` and the `help-link` href in `planner.html`.
 
-   Sign-in runs on `sunnyandtrupti.com` (`authDomain`), so self-host the Firebase
-   auth helpers: copy `handler`, `handler.js`, `experiments.js`, `iframe` and
-   `iframe.js` from `https://<project-id>.firebaseapp.com/__/auth/` into `__/auth/`
-   in this repo. After the push, verify `https://sunnyandtrupti.com/__/auth/handler`
-   renders. GitHub Pages may serve the extensionless `handler` and `iframe` as
-   downloads; if so, also save copies as `handler.html` and `iframe.html` (Pages
-   resolves `/handler` to `handler.html`). Add
-   `https://sunnyandtrupti.com/__/auth/handler` to the Google OAuth client's
-   authorised redirect URIs.
+   Sign-in runs on `sunnyandtrupti.com` (`authDomain`), so the Firebase auth
+   helpers are self-hosted in `__/auth/`: `handler.js`, `experiments.js` and
+   `iframe.js` as fetched from `https://<project-id>.firebaseapp.com/__/auth/`,
+   plus `handler` and `iframe` saved as `handler.html` and `iframe.html` (Pages
+   serves extensionless files as downloads and resolves `/handler` to
+   `handler.html`; `.nojekyll` keeps the `__` folder published). After a push,
+   verify `https://sunnyandtrupti.com/__/auth/handler` renders. The Google OAuth
+   web client lists `https://sunnyandtrupti.com` as a JavaScript origin and
+   `https://sunnyandtrupti.com/__/auth/handler` as a redirect URI.
 
    Deleting a label queries `in` plus `array-contains`, which may need a composite
    index. If so, Firestore returns a create-index link on the first label delete;
