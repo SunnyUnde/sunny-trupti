@@ -45,6 +45,29 @@ export function budgetFigures(vendors, budget) {
   return { total, quoted: sum('quote'), paid: sum('paid'), left: total === null ? null : total - sum('paid') };
 }
 
+// Which side a vendor's spending counts toward: the family bucket it is tagged
+// to, or the side of the planner who owns it. Anything else is shared ('both').
+export function vendorSide(v, members) {
+  if (v.owner === 'groom_family') return 'groom';
+  if (v.owner === 'bride_family') return 'bride';
+  if (v.owner === 'both') return 'both';
+  const m = members.find((x) => x.uid === v.owner);
+  return m && (m.side === 'groom' || m.side === 'bride') ? m.side : 'both';
+}
+
+// Rupees paid so far, grouped into groom / bride / both.
+export function sideSpending(vendors, members) {
+  const out = { groom: 0, bride: 0, both: 0 };
+  for (const v of vendors) out[vendorSide(v, members)] += v.paid || 0;
+  return out;
+}
+
+const SIDES = [
+  ['groom', "Groom's family", 'वराचे कुटुंब'],
+  ['bride', "Bride's family", 'वधूचे कुटुंब'],
+  ['both', 'Both families', 'दोन्ही कुटुंबे'],
+];
+
 // The owner name copied at write time; older vendors without one read "A planner".
 export const vendorOwnerLabel = (v) => (v.ownerName ? { en: v.ownerName, mr: v.ownerName } : { en: OTHER[0], mr: OTHER[1] });
 
@@ -175,6 +198,18 @@ export function createVendors(ctx, rerender) {
     return cards;
   }
 
+  function sideBreakdown(vendors, members) {
+    const spent = sideSpending(vendors, members);
+    const card = el('article', undefined, undefined, 'fv-card pv-side');
+    card.append(el('h4', 'Spent by side', 'बाजूनुसार खर्च'));
+    for (const [key, en, mr] of SIDES) {
+      const row = el('div', undefined, undefined, 'pv-side-row');
+      row.append(el('span', en, mr, 'pv-side-name'), rupees(spent[key]));
+      card.append(row);
+    }
+    return card;
+  }
+
   function vendorCard(v, members) {
     const card = el('article', undefined, undefined, 'fv-card');
     const name = text('button', v.name, 'pf-title');
@@ -199,6 +234,7 @@ export function createVendors(ctx, rerender) {
     render({ vendors, budget, members }) {
       const wrap = el('div', undefined, undefined, 'fv-stack');
       wrap.append(summary(budgetFigures(vendors, budget)));
+      if (vendors.length) wrap.append(sideBreakdown(vendors, members));
 
       const input = document.createElement('input');
       input.type = 'text';

@@ -249,3 +249,9 @@ html[lang="mr"] .pl-loading { letter-spacing: normal; }
   .btn-main:active, .btn-quiet:active, .fv-tab:active, .fv-chip:active,
   .pf-pill:active, .fv-filter-btn:active, .fv-card:hover { transform: none; }
 }
+
+/* Budget spent-by-side breakdown (Vendors tab). */
+.pv-side { gap: 10px; }
+.pv-side-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pv-side-name { color: var(--text); }
+.pv-side-row > span:last-child { font-family: var(--font-display); font-size: 22px; color: var(--maroon-ink); white-space: nowrap; }

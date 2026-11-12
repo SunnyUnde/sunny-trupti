@@ -101,6 +101,30 @@ test('vendorOwnerLabel uses the copied name, else the bilingual fallback', () =>
   assert.deepEqual(vend.vendorOwnerLabel({}), { en: 'A planner', mr: 'एक नियोजक' });
 });
 
+test('vendorSide: family buckets direct, a planner maps to their side, else shared', () => {
+  const members = [{ uid: 'g1', side: 'groom' }, { uid: 'b1', side: 'bride' }];
+  assert.equal(vend.vendorSide({ owner: 'groom_family' }, members), 'groom');
+  assert.equal(vend.vendorSide({ owner: 'bride_family' }, members), 'bride');
+  assert.equal(vend.vendorSide({ owner: 'both' }, members), 'both');
+  assert.equal(vend.vendorSide({ owner: 'g1' }, members), 'groom');
+  assert.equal(vend.vendorSide({ owner: 'b1' }, members), 'bride');
+  assert.equal(vend.vendorSide({ owner: 'unknown' }, members), 'both');
+  assert.equal(vend.vendorSide({ owner: 'g1' }, []), 'both');
+});
+
+test('sideSpending sums paid into groom / bride / both', () => {
+  const members = [{ uid: 'g1', side: 'groom' }];
+  const vs = [
+    { owner: 'groom_family', paid: 1000 },
+    { owner: 'g1', paid: 500 },
+    { owner: 'bride_family', paid: 2000 },
+    { owner: 'both', paid: 300 },
+    { owner: 'both' },
+  ];
+  assert.deepEqual(vend.sideSpending(vs, members), { groom: 1500, bride: 2000, both: 300 });
+  assert.deepEqual(vend.sideSpending([], members), { groom: 0, bride: 0, both: 0 });
+});
+
 test('ownerChoices fallback carries en and mr', async () => {
   const { ownerChoices } = await import('../js/planner/task-editor.js');
   const c = ownerChoices({ uid: 'u1', name: 'S' }, [], { owner: 'u9', ownerName: '', en: 'A planner', mr: 'एक नियोजक' });
